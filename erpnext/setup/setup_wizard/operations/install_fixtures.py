@@ -299,7 +299,7 @@ def install(country=None):
 		("Lead Source", "source_name", "lead_source.txt"),
 		("Sales Partner Type", "sales_partner_type", "sales_partner_type.txt"),
 	):
-		records += [{"doctype": doctype, title_field: title} for title in read_lines(filename)]
+		records += [{"doctype": doctype, title_field: _(title)} for title in read_lines(filename)]
 
 	base_path = frappe.get_app_path("erpnext", "stock", "doctype")
 	response = frappe.read_file(os.path.join(base_path, "delivery_trip/dispatch_notification_template.html"))

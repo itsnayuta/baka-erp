@@ -84,6 +84,16 @@ def set_single_defaults():
 				pass
 
 	frappe.db.set_default("date_format", "dd-mm-yyyy")
+	frappe.db.set_default("language", "vi")
+
+	try:
+		system_settings = frappe.get_doc("System Settings")
+		system_settings.language = "vi"
+		system_settings.date_format = "dd-mm-yyyy"
+		system_settings.flags.ignore_mandatory = True
+		system_settings.save(ignore_permissions=True)
+	except Exception:
+		pass
 
 	setup_currency_exchange()
 
