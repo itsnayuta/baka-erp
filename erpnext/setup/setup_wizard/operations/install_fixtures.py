@@ -25,6 +25,8 @@ def read_lines(filename: str) -> list[str]:
 
 
 def install(country=None):
+	if not country:
+		country = "Vietnam"
 	root_item_group = get_root_of("Item Group") or _("All Item Groups")
 	records = [
 		# ensure at least an empty Address Template exists for this Country

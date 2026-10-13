@@ -1,0 +1,143 @@
+import frappe
+from frappe import _
+
+def run():
+    print("=== Configuring ERP for Vietnam ===")
+    
+    # 0. Check Country doctype
+    viet_countries = frappe.db.sql("SELECT name, code FROM `tabCountry` WHERE name LIKE '%Viet%'", as_dict=True)
+    country_name = viet_countries[0].name if viet_countries else "Vietnam"
+    print(f"Using country name: {country_name}")
+
+    # 1. System Settings
+    sys_doc = frappe.get_doc("System Settings")
+    sys_doc.country = country_name
+    sys_doc.currency = "VND"
+    sys_doc.time_zone = "Asia/Ho_Chi_Minh"
+    sys_doc.date_format = "dd-mm-yyyy"
+    sys_doc.number_format = "#.###,##"
+    sys_doc.language = "vi"
+    sys_doc.flags.ignore_mandatory = True
+    sys_doc.save(ignore_permissions=True)
+    print(f"✓ Configured System Settings (Country: {country_name}, Currency: VND, Timezone: Asia/Ho_Chi_Minh, Language: vi)")
+
+    frappe.db.set_default("country", country_name)
+    frappe.db.set_default("currency", "VND")
+    frappe.db.set_default("time_zone", "Asia/Ho_Chi_Minh")
+    frappe.db.set_default("date_format", "dd-mm-yyyy")
+    frappe.db.set_default("number_format", "#.###,##")
+    frappe.db.set_default("language", "vi")
+
+    # 2. Setup Vietnam Address Template
+    from erpnext.regional.address_template.setup import update_address_template
+    vn_template = """{{ address_line1 }}<br>
+{% if address_line2 %}{{ address_line2 }}<br>{% endif -%}
+{% if city %}{{ city }}, {% endif -%}{% if state %}{{ state }}{% endif -%}{% if pincode %} {{ pincode }}{% endif -%}<br>
+Việt Nam"""
+    update_address_template(country_name, vn_template, is_default=1)
+    print(f"✓ Configured {country_name} Address Template as default")
+
+    # 3. Hide bloat / irrelevant workspaces
+    bloat_workspaces = [
+        "Integration", "Integrations", "Settings", "ERPNext Settings", 
+        "ERPNext Integrations", "Non Profit", "Agriculture", "Healthcare", 
+        "Hospitality", "Quality", "Build", "Welcome Workspace", "Tools", "Website"
+    ]
+    for ws in bloat_workspaces:
+        if frappe.db.exists("Workspace", ws):
+            frappe.db.set_value("Workspace", ws, "public", 0)
+    print(f"✓ Hidden unnecessary/foreign workspaces: {', '.join(bloat_workspaces)}")
+
+    # 4. Check Company and its Chart of Accounts
+    companies = frappe.get_all("Company", fields=["name", "company_name", "chart_of_accounts", "default_currency"])
+    print(f"Current companies: {companies}")
+    
+    gl_entries = frappe.db.count("GL Entry")
+    print(f"Total GL entries in system: {gl_entries}")
+
+    vn_coa_name = "Việt Nam - Hệ thống tài khoản theo Thông tư 200/133"
+
+    for comp in companies:
+        if comp.chart_of_accounts != vn_coa_name and gl_entries == 0:
+            print(f"Updating Chart of Accounts for company '{comp.name}' to Vietnamese TT 200/133...")
+            
+            # Ensure company currency in DB is VND and cache is cleared FIRST
+            frappe.db.set_value("Company", comp.name, "default_currency", "VND", update_modified=False)
+            frappe.db.set_value("Company", comp.name, "country", country_name, update_modified=False)
+            frappe.clear_document_cache("Company", comp.name)
+            
+            # Clear old company default account fields in database
+            account_fields = [
+                "default_bank_account", "default_cash_account", "default_receivable_account", 
+                "default_payable_account", "default_expense_account", "default_income_account", 
+                "round_off_account", "round_off_cost_center", "write_off_account", 
+                "discount_allowed_account", "discount_received_account", "exchange_gain_loss_account", 
+                "unrealized_exchange_gain_loss_account", "accumulated_depreciation_account", 
+                "depreciation_expense_account", "disposal_account", "depreciation_cost_center", 
+                "default_inventory_account", "stock_adjustment_account", "stock_received_but_not_billed", 
+                "expenses_included_in_valuation", "capital_work_in_progress_account",
+                "expenses_included_in_asset_valuation", "asset_received_but_not_billed"
+            ]
+            for f in account_fields:
+                try:
+                    frappe.db.set_value("Company", comp.name, f, None, update_modified=False)
+                except Exception:
+                    pass
+            
+            # Clear Mode of Payment Accounts for this company
+            frappe.db.sql("DELETE FROM `tabMode of Payment Account` WHERE company=%s", comp.name)
+            
+            # Delete old accounts
+            frappe.db.sql("DELETE FROM `tabAccount` WHERE company=%s", comp.name)
+            frappe.db.commit()
+
+            # Recreate accounts using Vietnam template
+            from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import create_charts
+            create_charts(comp.name, vn_coa_name)
+            
+            # Update all created accounts to VND if empty
+            frappe.db.sql("UPDATE `tabAccount` SET account_currency='VND' WHERE company=%s AND (account_currency IS NULL OR account_currency='')", comp.name)
+            frappe.clear_cache(doctype="Account")
+
+        # Configure company default accounts cleanly
+        comp_doc = frappe.get_doc("Company", comp.name)
+        comp_doc.chart_of_accounts = vn_coa_name
+        comp_doc.country = country_name
+        comp_doc.default_currency = "VND"
+        comp_doc.update_default_account = 1
+        
+        recv = frappe.db.get_value("Account", {"company": comp.name, "name": ["like", "1311%"]})
+        pay = frappe.db.get_value("Account", {"company": comp.name, "name": ["like", "3311%"]})
+        inv = frappe.db.get_value("Account", {"company": comp.name, "name": ["like", "1561%"]})
+        cash = frappe.db.get_value("Account", {"company": comp.name, "name": ["like", "1111%"]})
+        bank = frappe.db.get_value("Account", {"company": comp.name, "name": ["like", "1121%"]})
+
+        comp_doc.set_default_accounts()
+        comp_doc.set_mode_of_payment_account()
+
+        if recv:
+            comp_doc.default_receivable_account = recv
+        if pay:
+            comp_doc.default_payable_account = pay
+        if inv:
+            comp_doc.default_inventory_account = inv
+        if cash:
+            comp_doc.default_cash_account = cash
+        if bank:
+            comp_doc.default_bank_account = bank
+
+        comp_doc.flags.ignore_mandatory = True
+        comp_doc.save(ignore_permissions=True)
+        
+        # Ensure direct db_set for precision
+        if pay:
+            comp_doc.db_set("default_payable_account", pay)
+        if recv:
+            comp_doc.db_set("default_receivable_account", recv)
+        if inv:
+            comp_doc.db_set("default_inventory_account", inv)
+
+        print(f"✓ Configured standard Vietnamese defaults for {comp.name}")
+
+    frappe.db.commit()
+    print("=== Vietnam ERP Optimization Complete ===")

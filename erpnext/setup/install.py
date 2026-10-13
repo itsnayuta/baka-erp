@@ -83,13 +83,21 @@ def set_single_defaults():
 			except frappe.ValidationError:
 				pass
 
+	frappe.db.set_default("country", "Vietnam")
+	frappe.db.set_default("currency", "VND")
+	frappe.db.set_default("time_zone", "Asia/Ho_Chi_Minh")
 	frappe.db.set_default("date_format", "dd-mm-yyyy")
+	frappe.db.set_default("number_format", "#.###,##")
 	frappe.db.set_default("language", "vi")
 
 	try:
 		system_settings = frappe.get_doc("System Settings")
+		system_settings.country = "Vietnam"
+		system_settings.currency = "VND"
+		system_settings.time_zone = "Asia/Ho_Chi_Minh"
 		system_settings.language = "vi"
 		system_settings.date_format = "dd-mm-yyyy"
+		system_settings.number_format = "#.###,##"
 		system_settings.flags.ignore_mandatory = True
 		system_settings.save(ignore_permissions=True)
 	except Exception:
@@ -284,8 +292,14 @@ def add_app_name():
 
 
 def hide_workspaces():
-	for ws in ["Integration", "Settings"]:
-		frappe.db.set_value("Workspace", ws, "public", 0)
+	bloat_workspaces = [
+		"Integration", "Integrations", "Settings", "ERPNext Settings",
+		"ERPNext Integrations", "Non Profit", "Agriculture", "Healthcare",
+		"Hospitality", "Quality", "Build", "Welcome Workspace"
+	]
+	for ws in bloat_workspaces:
+		if frappe.db.exists("Workspace", ws):
+			frappe.db.set_value("Workspace", ws, "public", 0)
 
 
 def update_roles():
@@ -319,36 +333,8 @@ def create_default_role_profiles():
 
 
 def update_pegged_currencies():
-	doc = frappe.get_doc("Pegged Currencies", "Pegged Currencies")
-
-	existing_sources = {item.source_currency for item in doc.pegged_currency_item}
-
-	currencies_to_add = [
-		{"source_currency": "AED", "pegged_against": "USD", "pegged_exchange_rate": 3.6725},
-		{"source_currency": "BHD", "pegged_against": "USD", "pegged_exchange_rate": 0.376},
-		{"source_currency": "JOD", "pegged_against": "USD", "pegged_exchange_rate": 0.709},
-		{"source_currency": "OMR", "pegged_against": "USD", "pegged_exchange_rate": 0.3845},
-		{"source_currency": "QAR", "pegged_against": "USD", "pegged_exchange_rate": 3.64},
-		{"source_currency": "SAR", "pegged_against": "USD", "pegged_exchange_rate": 3.75},
-	]
-
-	# Add items on pegged_currency_item if source_currency and pegged_against currency doc exist.
-
-	currencies_exist = frappe.db.get_list(
-		"Currency", {"name": ["in", ["AED", "BHD", "JOD", "OMR", "QAR", "SAR", "USD"]]}, pluck="name"
-	)
-
-	if "USD" not in currencies_exist:
-		return
-
-	for currency in currencies_to_add:
-		if (
-			currency["source_currency"] in currencies_exist
-			and currency["source_currency"] not in existing_sources
-		):
-			doc.append("pegged_currency_item", currency)
-
-	doc.save()
+	# Pegged Middle-East currencies to USD are not applicable for Vietnamese domestic deployment
+	pass
 
 
 DEFAULT_ROLE_PROFILES = {
