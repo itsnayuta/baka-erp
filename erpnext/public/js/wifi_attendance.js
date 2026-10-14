@@ -5,61 +5,62 @@ frappe.provide("baka.attendance");
 
 baka.attendance = {
 	status: null,
+	_render_seq: 0,
+	_initialized: false,
 
 	init: function () {
-		this.setup_navbar_button();
-		this.setup_router_listener();
+		if (this._initialized) return;
+		this._initialized = true;
+
+		// 1. Loại bỏ hoàn toàn nút Chấm công trên thanh Navbar (chỉ chấm công trong My Profile)
+		$(".baka-nav-checkin-item, .baka-nav-checkin-btn").remove();
+
+		// 2. Thiết lập hook tích hợp trực tiếp vào màn hình My Profile
+		this.setup_profile_hook();
 	},
 
-	setup_navbar_button: function () {
-		if ($(".baka-nav-checkin-btn").length) return;
-
-		// Thêm nút Chấm công nhanh trên thanh Navbar góc trên bên phải
-		let nav_target = $(".navbar .navbar-nav:last, header .navbar-right").first();
-		if (!nav_target.length) {
-			nav_target = $(".navbar").first();
-		}
-
-		if (nav_target.length && frappe.session.user !== "Guest") {
-			let btn = $(`
-				<li class="nav-item baka-nav-checkin-item" style="display: flex; align-items: center; margin-right: 8px;">
-					<button class="btn btn-sm btn-default baka-nav-checkin-btn" style="border-radius: 16px; font-weight: 600; padding: 4px 12px; background: var(--bg-color, #fff); border: 1px solid var(--border-color, #d1d8dd); box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-						<span class="indicator-pill green" style="width: 8px; height: 8px; border-radius: 50%; background: #28a745; display: inline-block;"></span>
-						<span>Chấm công WiFi</span>
-					</button>
-				</li>
-			`);
-			btn.find("button").on("click", () => {
-				this.open_checkin_dialog();
-			});
-			nav_target.prepend(btn);
-		}
-	},
-
-	_render_seq: 0,
-
-	setup_router_listener: function () {
-		let debounced_render = null;
-		const trigger_render = () => {
-			if (debounced_render) clearTimeout(debounced_render);
-			debounced_render = setTimeout(() => {
-				let current_route = frappe.get_route();
-				if (current_route && current_route[0] === "user-profile") {
-					this.render_profile_widget();
-				} else {
-					$("#baka-profile-attendance-wrapper").remove();
-				}
-			}, 150);
+	setup_profile_hook: function () {
+		const hook_controller = () => {
+			if (frappe.ui && frappe.ui.UserProfile && !frappe.ui.UserProfile.prototype._baka_attendance_hooked) {
+				frappe.ui.UserProfile.prototype._baka_attendance_hooked = true;
+				const orig_make = frappe.ui.UserProfile.prototype.make_user_profile;
+				frappe.ui.UserProfile.prototype.make_user_profile = function () {
+					orig_make.apply(this, arguments);
+					baka.attendance.render_profile_widget(this);
+				};
+			}
 		};
 
+		hook_controller();
+
+		let debounced_timer = null;
 		frappe.router.on("change", () => {
-			trigger_render();
+			// Luôn đảm bảo không có nút bấm chấm công trên Navbar
+			$(".baka-nav-checkin-item, .baka-nav-checkin-btn").remove();
+
+			let current_route = frappe.get_route();
+			if (current_route && current_route[0] === "user-profile") {
+				hook_controller();
+				if (debounced_timer) clearTimeout(debounced_timer);
+				debounced_timer = setTimeout(() => {
+					if (!$("#baka-profile-attendance-wrapper").length) {
+						this.render_profile_widget();
+					}
+				}, 100);
+			} else {
+				$(".baka-profile-attendance-card, #baka-profile-attendance-wrapper").remove();
+			}
 		});
 
-		// Trigger if already on user-profile
+		// Trigger nếu đang ở trang user-profile sẵn
 		let route = frappe.get_route();
 		if (route && route[0] === "user-profile") {
-			trigger_render();
+			hook_controller();
+			setTimeout(() => {
+				if (!$("#baka-profile-attendance-wrapper").length) {
+					this.render_profile_widget();
+				}
+			}, 150);
 		}
 	},
 
@@ -100,27 +101,45 @@ baka.attendance = {
 		});
 	},
 
-	render_profile_widget: function () {
-		let container = $(".user-profile .col-md-12").first();
-		if (!container.length) return;
+	render_profile_widget: function (user_profile_inst) {
+		// Dọn sạch toàn bộ card hoặc wrapper cũ (bảo đảm 100% không bao giờ bị trùng lặp)
+		$(".baka-profile-attendance-card, #baka-profile-attendance-wrapper").remove();
 
-		// Tạo hoặc lấy wrapper duy nhất để triệt để loại bỏ tình trạng lặp DOM
-		let $wrapper = $("#baka-profile-attendance-wrapper");
-		if (!$wrapper.length) {
-			$wrapper = $('<div id="baka-profile-attendance-wrapper" style="width: 100%;"></div>');
-			container.prepend($wrapper);
+		// Xác định container và user
+		let target_container = null;
+		let target_user = frappe.session.user;
+
+		if (user_profile_inst && user_profile_inst.main_section) {
+			target_container = user_profile_inst.main_section.find(".col-md-12").first();
+			target_user = user_profile_inst.user_id || frappe.session.user;
+		} else {
+			let $profile = $(".user-profile:visible");
+			if (!$profile.length) $profile = $(".user-profile");
+			target_container = $profile.find(".col-md-12").first();
+			let route = frappe.get_route();
+			target_user = (route && route[0] === "user-profile" && route[1]) ? route[1] : frappe.session.user;
 		}
 
-		let current_route = frappe.get_route();
-		let target_user = (current_route && current_route[0] === "user-profile" && current_route[1])
-			? current_route[1]
-			: frappe.session.user;
+		if (!target_container || !target_container.length) return;
+
+		// Tạo wrapper duy nhất và chèn trước .performance-graphs
+		let $wrapper = $('<div id="baka-profile-attendance-wrapper" style="width: 100%;"></div>');
+		let $perf = target_container.find(".performance-graphs");
+		if ($perf.length) {
+			$perf.before($wrapper);
+		} else {
+			target_container.prepend($wrapper);
+		}
 
 		let req_id = ++this._render_seq;
 
 		this.fetch_status(target_user, (s) => {
 			if (req_id !== this._render_seq) return;
 			if (!s || !s.employee_id) return;
+			if (!$wrapper.closest("body").length) return;
+
+			// Quét dọn lần nữa để bảo đảm không có thẻ card nào rò rỉ bên ngoài
+			$(".baka-profile-attendance-card").not($wrapper.find(".baka-profile-attendance-card")).remove();
 
 			let is_own_profile = (target_user === frappe.session.user);
 
@@ -222,13 +241,13 @@ baka.attendance = {
 
 			$wrapper.find(".baka-checkin-btn").on("click", () => {
 				this.do_checkin("IN", () => {
-					this.render_profile_widget();
+					this.render_profile_widget(user_profile_inst);
 				});
 			});
 
 			$wrapper.find(".baka-checkout-btn").on("click", () => {
 				this.do_checkin("OUT", () => {
-					this.render_profile_widget();
+					this.render_profile_widget(user_profile_inst);
 				});
 			});
 
@@ -238,70 +257,7 @@ baka.attendance = {
 				});
 			});
 		});
-	},
-
-	open_checkin_dialog: function () {
-		this.fetch_status((s) => {
-			let wifi_status_text = s.is_wifi_ok
-				? `<div style="background: #e6f4ea; border: 1px solid #ceead6; color: #137333; padding: 10px; border-radius: 6px; font-size: 13px;">
-					<i class="fa fa-check-circle"></i> Đang kết nối đúng mạng WiFi văn phòng: <b>${frappe.utils.escape_html(s.wifi_ssid)}</b> (IP: ${frappe.utils.escape_html(s.client_ip)})
-				   </div>`
-				: `<div style="background: #fce8e6; border: 1px solid #fad2cf; color: #c5221f; padding: 10px; border-radius: 6px; font-size: 13px;">
-					<i class="fa fa-exclamation-triangle"></i> Bạn chưa kết nối vào WiFi văn phòng (Yêu cầu mạng: <b>${frappe.utils.escape_html(s.wifi_ssid)}</b>). IP hiện tại: ${frappe.utils.escape_html(s.client_ip)}.
-				   </div>`;
-
-			let d = new frappe.ui.Dialog({
-				title: __("Chấm Công WiFi Văn Phòng"),
-				fields: [
-					{
-						fieldtype: "HTML",
-						fieldname: "attendance_html",
-						options: `
-							<div style="margin-bottom: 15px;">${wifi_status_text}</div>
-							<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-								<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-									<span style="color: var(--text-muted, #64748b);">Nhân viên:</span>
-									<span style="font-weight: 600;">${frappe.utils.escape_html(s.employee_name)}</span>
-								</div>
-								<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-									<span style="color: var(--text-muted, #64748b);">Giờ vào hôm nay:</span>
-									<span style="font-weight: 700; color: ${s.today_in ? "#16a34a" : "#64748b"};">${s.today_in || "Chưa ghi nhận"}</span>
-								</div>
-								<div style="display: flex; justify-content: space-between;">
-									<span style="color: var(--text-muted, #64748b);">Giờ ra hôm nay:</span>
-									<span style="font-weight: 700; color: ${s.today_out ? "#0284c7" : "#64748b"};">${s.today_out || "Chưa ghi nhận"}</span>
-								</div>
-							</div>
-							<div style="display: flex; gap: 10px;">
-								<button class="btn btn-primary baka-dlg-checkin" style="flex: 1; padding: 12px; font-weight: 600; background: #16a34a; border-color: #16a34a;">
-									<i class="fa fa-sign-in"></i> Chấm công VÀO (IN)
-								</button>
-								<button class="btn btn-info baka-dlg-checkout" style="flex: 1; padding: 12px; font-weight: 600; background: #0284c7; border-color: #0284c7;">
-									<i class="fa fa-sign-out"></i> Chấm công RA (OUT)
-								</button>
-							</div>
-						`,
-					},
-				],
-			});
-
-			d.show();
-
-			d.$wrapper.find(".baka-dlg-checkin").on("click", () => {
-				this.do_checkin("IN", () => {
-					d.hide();
-					this.render_profile_widget();
-				});
-			});
-
-			d.$wrapper.find(".baka-dlg-checkout").on("click", () => {
-				this.do_checkin("OUT", () => {
-					d.hide();
-					this.render_profile_widget();
-				});
-			});
-		});
-	},
+	}
 };
 
 // Khởi chạy khi Frappe App sẵn sàng
@@ -313,6 +269,5 @@ $(document).on("app_ready", function () {
 if (window.frappe && frappe.boot) {
 	setTimeout(() => {
 		baka.attendance.init();
-	}, 500);
+	}, 300);
 }
-
