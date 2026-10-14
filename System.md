@@ -27,17 +27,17 @@ Giao diện My Profile gồm 2 khu vực chính: **Thanh bên hồ sơ (Sidebar)
 │   THANH BÊN HỒ SƠ (SIDEBAR)     │           KHU VỰC HIỂN THỊ CHÍNH (MAIN SECTION)        │
 ├─────────────────────────────────┼────────────────────────────────────────────────────────┤
 │ • Ảnh đại diện (Avatar)         │ [1] Thẻ Chấm Công WiFi BAKA (WiFi Attendance Card)     │
-│ • Họ và tên đầy đủ              │     - Trạng thái ca: Chưa chấm / Đang làm / Hoàn thành │
-│ • Chức vụ & Phòng ban           │     - Giờ Vào / Giờ Ra / Tổng thời gian đã làm việc    │
-│ • Bio (Mô tả trách nhiệm)       │     - Nút Chấm công VÀO / RA / Xem lịch sử chấm công   │
-│                                 │                                                        │
-│ • Chỉ số thành tích & Thi đua:  │ [2] Biểu Đồ Tổng Quan Chuyên Cần (Heatmap)             │
-│   - Điểm đánh giá (X điểm)      │     - 1 giờ làm việc = 1 điểm chuyên cần (Max: 8đ/ngày)│
-│   - Điểm chuyên cần (Y điểm)    │     - Càng đủ giờ làm ô càng xanh đậm                  │
-│   - Hạng (Rank)                 │     - Tooltip: Di chuột hiển thị "X Điểm chuyên cần"   │
-│   - Hạng tháng (Monthly Rank)   │                                                        │
-│                                 │ [3] Biểu Đồ Điểm Đánh Giá (Line Chart)                 │
-│ • Nút [Đổi người dùng]          │     - Xu hướng điểm thưởng hiệu suất theo thời gian    │
+│ • Họ và tên đầy đủ              │     - 4 Chỉ số: Giờ Vào / Giờ Ra / Hôm nay / Tổng tháng│
+│ • Chức vụ & Phòng ban           │     - Nút Chấm công Đan xen theo ca (VÀO / RA)         │
+│ • Bio (Mô tả trách nhiệm)       │                                                        │
+│                                 │ [2] Biểu Đồ Tổng Quan Chuyên Cần (Heatmap)             │
+│ • Chỉ số thành tích & Thi đua:  │     - 1 giờ làm việc = 1 điểm chuyên cần (Max: 8đ/ngày)│
+│   - Điểm đánh giá (X điểm)      │     - Càng đủ giờ làm ô càng xanh đậm                  │
+│   - Điểm chuyên cần (Y điểm)    │     - Tooltip: Di chuột hiển thị "X Điểm chuyên cần"   │
+│   - Hạng (Rank)                 │                                                        │
+│   - Hạng tháng (Monthly Rank)   │ [3] Biểu Đồ Điểm Đánh Giá (Line Chart)                 │
+│                                 │     - Xu hướng điểm thưởng hiệu suất theo thời gian    │
+│ • Nút [Đổi người dùng]          │                                                        │
 └─────────────────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
@@ -64,7 +64,7 @@ Nằm ở cột bên trái màn hình, cung cấp thông tin định danh và b�
 
 ---
 
-### 2.2. Thẻ Chấm công WiFi BAKA (WiFi Attendance Card) & Cơ chế Chống Spam
+### 2.2. Thẻ Chấm công WiFi BAKA & Quản lý Ca Đan Xen (Multi-shift)
 
 Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nhận thời gian làm việc duy nhất của hệ thống:
 
@@ -72,21 +72,25 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
    - Bắt buộc nhân viên phải kết nối đúng mạng WiFi văn phòng (`BAKA-OFFICE-5G`).
    - Hệ thống tự động kiểm tra địa chỉ IP truy cập của thiết bị. Nếu nhân viên ở ngoài văn phòng hoặc dùng mạng 4G/mạng lạ, hệ thống sẽ **từ chối chấm công** và phát cảnh báo yêu cầu kết nối đúng WiFi công ty.
 
-2. **Cơ chế chống spam & Đảm bảo dữ liệu ca làm việc tinh chuẩn:**
-   - **Khóa Cooldown 5 phút (Rate Limiting):** Khoảng cách giữa 2 lần bấm chấm công tối thiểu là 300 giây (5 phút). Nếu bấm liên tục trong vòng 5 phút, hệ thống sẽ chặn lại và thông báo chính xác số giây cần chờ.
-   - **Khóa nút bấm tức thì (Click Lock):** Ngay khi nhân viên click nút chấm công, nút bấm sẽ bị vô hiệu hóa (`disabled`) lập tức để triệt tiêu tình trạng double-click hoặc đa chạm trên màn hình cảm ứng điện thoại.
-   - **Tự động gộp giờ Tăng ca (Overtime Dedup):** Sau khi đã hoàn thành ca, nếu nhân viên ở lại làm thêm giờ và bấm cập nhật giờ ra về (sau > 5 phút), hệ thống sẽ cập nhật đè thời gian mới vào chính bản ghi RA của ngày hôm đó, tuyệt đối không tạo thêm bản ghi rác. Mỗi nhân viên chỉ có đúng 1 bản ghi VÀO và 1 bản ghi RA mỗi ngày.
+2. **Bảng 4 chỉ số thống kê trực quan:**
+   - **Giờ Vào Hôm Nay:** Mốc thời gian bắt đầu ca đầu tiên trong ngày (ví dụ: `08:15:37`).
+   - **Giờ Ra Hôm Nay:** Mốc thời gian kết thúc ca gần nhất trong ngày (hoặc `--:--` nếu đang trong ca).
+   - **Thời Gian Hôm Nay:** Tổng thời lượng làm việc thực tế đã tích lũy trong ngày (`X giờ Y phút`).
+   - **Tổng Giờ Tháng Này:** Tổng số giờ làm việc thực tế tích lũy của nhân viên trong tháng hiện tại (ví dụ: `86.5 giờ`).
 
-3. **Chuyển đổi giao diện theo trạng thái ca làm việc (State-aware UI):**
-   - **Chưa vào ca (`NOT_CHECKED_IN`):** Hiển thị nhãn cảnh báo màu vàng, giao diện chỉ hiển thị duy nhất nút **`Chấm công VÀO`**. Chặn không cho phép bấm RA khi chưa vào ca.
-   - **Đang làm việc (`CHECKED_IN`):** Hiển thị nhãn màu xanh lá (*"Đang trong ca làm việc"*), ghi nhận thời điểm VÀO (ví dụ: `08:15:30`), đồng hồ đếm tổng thời gian làm việc thực tế tính đến hiện tại (`X giờ Y phút`), giao diện chuyển sang duy nhất nút **`Chấm công RA`**. Chặn không cho bấm thêm lần VÀO nào nữa.
-   - **Đã hoàn thành ca (`CHECKED_OUT`):** Hiển thị nhãn màu xanh đậm (*"Đã hoàn thành ca làm việc"*), hiển thị giờ VÀO, giờ RA và tổng thời lượng làm việc trong ngày. Nút thao tác chuyển thành **`Cập nhật giờ RA (Tăng ca)`**.
+3. **Cơ chế Máy trạng thái Đan xen (State-Machine) & Hỗ trợ 2 Ca/Nhiều Ca:**
+   - Hỗ trợ linh hoạt cho cả nhân viên làm 1 ca thông thường hoặc làm **2 ca / ca gãy / ca tăng ca** (Ca sáng $\rightarrow$ Ca chiều $\rightarrow$ Tăng ca tối).
+   - **Quy trình đan xen tự nhiên:** $\text{VÀO} \rightarrow \text{RA} \rightarrow \text{VÀO} \rightarrow \text{RA}$.
+   - **Chống spam & chống bấm nhầm:**
+     - Đang ngoài ca (hoặc đầu ngày): Giao diện chỉ hiển thị duy nhất nút **`Chấm công VÀO`** (hoặc `Chấm công VÀO (Ca tiếp theo)`). Chặn không cho phép bấm RA.
+     - Đang trong ca: Giao diện tự động chuyển sang duy nhất nút **`Chấm công RA`**, hiển thị rõ ca đang làm và thời gian làm việc. Chặn không cho phép bấm VÀO tiếp.
+     - **Khóa Cooldown 5 phút:** Khoảng cách tối thiểu giữa 2 lần bấm là 300 giây (5 phút), chặn hoàn toàn việc bấm liên tục gây trùng dữ liệu.
+     - **Khóa nút bấm tức thì (Click Lock):** Nút bấm lập tức vô hiệu hóa khi chạm chuột/màn hình cảm ứng để triệt tiêu lỗi double-click.
 
-4. **Các nút tương tác:**
-   - **`Chấm công VÀO` (Check-in):** Ghi nhận bắt đầu ca làm việc.
-   - **`Chấm công RA` (Check-out):** Ghi nhận kết thúc ca làm việc.
-   - **`Cập nhật giờ RA (Tăng ca)`:** Cập nhật lại mốc thời gian ra về muộn hơn cho nhân viên tăng ca.
-   - **`Xem lịch sử chi tiết`:** Chuyển nhanh sang màn hình danh sách nhật ký chấm công chi tiết (`Employee Checkin`).
+4. **Tính giờ làm việc & Điểm chuyên cần chuẩn xác:**
+   - Tổng thời gian làm việc được tính theo tổng độ dài của từng cặp ca thực tế: $\sum (\text{RA}_i - \text{VÀO}_i)$.
+   - Tự động loại trừ thời gian nghỉ giữa các ca, bảo đảm dữ liệu minh bạch, chuẩn xác cho cả doanh nghiệp và người lao động.
+   - Đã loại bỏ hoàn toàn nút *"Xem lịch sử chi tiết"* rườm rà, tập trung tối đa vào trải nghiệm nhanh gọn của người dùng.
 
 ---
 

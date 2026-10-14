@@ -439,33 +439,30 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 					<i class="fa fa-exclamation-triangle"></i>
 					Ch\u01B0a v\xE0o WiFi c\xF4ng ty (${frappe.utils.escape_html(n.wifi_ssid)}) - IP: ${frappe.utils.escape_html(n.client_ip)}
 				   </span>`,d="";if(o){let p="";n.shift_status==="NOT_CHECKED_IN"?p=`
-						<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
 							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Ch\u1EA5m c\xF4ng V\xC0O (Check In)
 						</button>
-					`:n.shift_status==="CHECKED_IN"?p=`
-						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+					`:n.shift_status==="IN_SHIFT"?p=`
+						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 							<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
-							\u0110ang l\xE0m vi\u1EC7c (V\xE0o: <b>${n.today_in||""}</b> \u2022 \u0110\xE3 l\xE0m: <b>${n.work_hours_str||""}</b>)
+							${n.status_label} (V\xE0o l\xFAc: <b>${n.last_log?n.last_log.time:n.today_in}</b> \u2022 H\xF4m nay: <b>${n.work_hours_str||""}</b>)
 						</div>
-						<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
+						<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
 							<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Ch\u1EA5m c\xF4ng RA (Check Out)
 						</button>
 					`:p=`
-						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 							<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
-							\u0110\xE3 ho\xE0n th\xE0nh ca (V\xE0o: <b>${n.today_in}</b> \u2022 Ra: <b>${n.today_out}</b> \u2022 T\u1ED5ng: <b>${n.work_hours_str}</b>)
+							${n.status_label} (H\xF4m nay \u0111\xE3 l\xE0m: <b>${n.work_hours_str}</b>)
 						</div>
-						<button class="btn btn-default baka-checkout-btn" style="padding: 9px 18px; font-weight: 600; font-size: 13px; color: #0284c7; border-color: #cbd5e1;" title="C\u1EADp nh\u1EADt gi\u1EDD n\u1EBFu b\u1EA1n l\xE0m th\xEAm gi\u1EDD v\u1EC1 mu\u1ED9n h\u01A1n">
-							<i class="fa fa-refresh" style="margin-right: 4px;"></i> C\u1EADp nh\u1EADt gi\u1EDD RA (T\u0103ng ca)
+						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Ch\u1EA5m c\xF4ng V\xC0O (Ca ti\u1EBFp theo)
 						</button>
 					`,d=`
 					<div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; background: var(--fg-color, #f8fafc); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
 						<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
 							${p}
 						</div>
-						<button class="btn btn-default baka-view-history-btn" style="padding: 9px 16px; font-weight: 500;">
-							<i class="fa fa-list" style="margin-right: 4px;"></i> Xem l\u1ECBch s\u1EED chi ti\u1EBFt
-						</button>
 					</div>
 				`}else d=`
 					<div style="display: flex; justify-content: space-between; align-items: center; background: var(--fg-color, #f8fafc); border: 1px dashed var(--border-color, #cbd5e1); border-radius: 8px; padding: 12px 18px; flex-wrap: wrap; gap: 10px;">
@@ -473,9 +470,6 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 							<i class="fa fa-info-circle" style="color: #0284c7; margin-right: 6px;"></i>
 							\u0110ang xem d\u1EEF li\u1EC7u ch\u1EA5m c\xF4ng c\u1EE7a nh\xE2n vi\xEAn: <b style="color: var(--text-color, #1e293b);">${frappe.utils.escape_html(n.employee_name)}</b> (${n.status_label||""})
 						</div>
-						<button class="btn btn-default btn-sm baka-view-history-btn" style="font-weight: 500;">
-							<i class="fa fa-list"></i> Xem l\u1ECBch s\u1EED chi ti\u1EBFt
-						</button>
 					</div>
 				`;let c=`
 				<div class="frappe-card baka-profile-attendance-card" style="margin-bottom: 20px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--card-bg, #fff); box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow: hidden;">
@@ -511,7 +505,7 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Th\u1EDDi Gian L\xE0m Vi\u1EC7c</div>
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Th\u1EDDi Gian H\xF4m Nay</div>
 									<div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">
 										${n.work_hours_str||"0 gi\u1EDD 0 ph\xFAt"}
 									</div>
@@ -519,9 +513,9 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Tr\u1EA1ng Th\xE1i Ca</div>
-									<div style="font-size: 17px; font-weight: 700; color: ${n.status_color||"#16a34a"}; margin-top: 6px;">
-										${n.status_label||"Ch\u01B0a v\xE0o ca"}
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">T\u1ED5ng Gi\u1EDD Th\xE1ng N\xE0y</div>
+									<div style="font-size: 20px; font-weight: 700; color: #0f766e; margin-top: 4px;">
+										${n.month_hours_str||"0 gi\u1EDD"}
 									</div>
 								</div>
 							</div>
@@ -530,5 +524,5 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 						${d}
 					</div>
 				</div>
-			`;a.html(c),a.find(".baka-checkin-btn").on("click",()=>{this.do_checkin("IN",()=>{this.render_profile_widget(r)})}),a.find(".baka-checkout-btn").on("click",()=>{this.do_checkin("OUT",()=>{this.render_profile_widget(r)})}),a.find(".baka-view-history-btn").on("click",()=>{frappe.set_route("List","Employee Checkin",{employee:n.employee_id})})})}};$(document).on("app_ready",function(){baka.attendance.init()});window.frappe&&frappe.boot&&setTimeout(()=>{baka.attendance.init()},300);})();
-//# sourceMappingURL=erpnext.bundle.IVSDNP7L.js.map
+			`;a.html(c),a.find(".baka-checkin-btn").on("click",()=>{this.do_checkin("IN",()=>{this.render_profile_widget(r)})}),a.find(".baka-checkout-btn").on("click",()=>{this.do_checkin("OUT",()=>{this.render_profile_widget(r)})})})}};$(document).on("app_ready",function(){baka.attendance.init()});window.frappe&&frappe.boot&&setTimeout(()=>{baka.attendance.init()},300);})();
+//# sourceMappingURL=erpnext.bundle.J3Q4LEWU.js.map

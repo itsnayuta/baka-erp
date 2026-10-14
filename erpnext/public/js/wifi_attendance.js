@@ -307,28 +307,28 @@ baka.attendance = {
 				let checkin_buttons = "";
 				if (s.shift_status === "NOT_CHECKED_IN") {
 					checkin_buttons = `
-						<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
 							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Check In)
 						</button>
 					`;
-				} else if (s.shift_status === "CHECKED_IN") {
+				} else if (s.shift_status === "IN_SHIFT") {
 					checkin_buttons = `
-						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 							<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
-							Đang làm việc (Vào: <b>${s.today_in || ''}</b> • Đã làm: <b>${s.work_hours_str || ''}</b>)
+							${s.status_label} (Vào lúc: <b>${s.last_log ? s.last_log.time : s.today_in}</b> • Hôm nay: <b>${s.work_hours_str || ''}</b>)
 						</div>
-						<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
+						<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
 							<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
 						</button>
 					`;
 				} else {
 					checkin_buttons = `
-						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 							<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
-							Đã hoàn thành ca (Vào: <b>${s.today_in}</b> • Ra: <b>${s.today_out}</b> • Tổng: <b>${s.work_hours_str}</b>)
+							${s.status_label} (Hôm nay đã làm: <b>${s.work_hours_str}</b>)
 						</div>
-						<button class="btn btn-default baka-checkout-btn" style="padding: 9px 18px; font-weight: 600; font-size: 13px; color: #0284c7; border-color: #cbd5e1;" title="Cập nhật giờ nếu bạn làm thêm giờ về muộn hơn">
-							<i class="fa fa-refresh" style="margin-right: 4px;"></i> Cập nhật giờ RA (Tăng ca)
+						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Ca tiếp theo)
 						</button>
 					`;
 				}
@@ -338,9 +338,6 @@ baka.attendance = {
 						<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
 							${checkin_buttons}
 						</div>
-						<button class="btn btn-default baka-view-history-btn" style="padding: 9px 16px; font-weight: 500;">
-							<i class="fa fa-list" style="margin-right: 4px;"></i> Xem lịch sử chi tiết
-						</button>
 					</div>
 				`;
 			} else {
@@ -350,9 +347,6 @@ baka.attendance = {
 							<i class="fa fa-info-circle" style="color: #0284c7; margin-right: 6px;"></i>
 							Đang xem dữ liệu chấm công của nhân viên: <b style="color: var(--text-color, #1e293b);">${frappe.utils.escape_html(s.employee_name)}</b> (${s.status_label || ''})
 						</div>
-						<button class="btn btn-default btn-sm baka-view-history-btn" style="font-weight: 500;">
-							<i class="fa fa-list"></i> Xem lịch sử chi tiết
-						</button>
 					</div>
 				`;
 			}
@@ -391,7 +385,7 @@ baka.attendance = {
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Thời Gian Làm Việc</div>
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Thời Gian Hôm Nay</div>
 									<div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">
 										${s.work_hours_str || "0 giờ 0 phút"}
 									</div>
@@ -399,9 +393,9 @@ baka.attendance = {
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Trạng Thái Ca</div>
-									<div style="font-size: 17px; font-weight: 700; color: ${s.status_color || '#16a34a'}; margin-top: 6px;">
-										${s.status_label || "Chưa vào ca"}
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Tổng Giờ Tháng Này</div>
+									<div style="font-size: 20px; font-weight: 700; color: #0f766e; margin-top: 4px;">
+										${s.month_hours_str || "0 giờ"}
 									</div>
 								</div>
 							</div>
@@ -423,12 +417,6 @@ baka.attendance = {
 			$wrapper.find(".baka-checkout-btn").on("click", () => {
 				this.do_checkin("OUT", () => {
 					this.render_profile_widget(user_profile_inst);
-				});
-			});
-
-			$wrapper.find(".baka-view-history-btn").on("click", () => {
-				frappe.set_route("List", "Employee Checkin", {
-					employee: s.employee_id,
 				});
 			});
 		});

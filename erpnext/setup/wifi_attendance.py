@@ -126,31 +126,59 @@ def get_attendance_status(user=None):
     total_days = len(worked_dates)
     on_time_count = max(0, total_days - late_count)
 
-    # Trạng thái ca làm việc hôm nay
-    if not today_in:
+    # 1. Giờ vào đầu tiên và Giờ ra gần nhất hôm nay
+    today_ins = [c for c in today_checkins if c.log_type == "IN"]
+    today_outs = [c for c in today_checkins if c.log_type == "OUT"]
+
+    today_in = today_ins[0].time.strftime("%H:%M:%S") if today_ins else None
+    today_out = today_outs[-1].time.strftime("%H:%M:%S") if today_outs else None
+
+    # 2. Tính tổng thời gian làm việc hôm nay theo từng cặp ca
+    cur_in = None
+    today_seconds = 0
+    pair_count = 0
+    for l in today_checkins:
+        if l.log_type == "IN":
+            if cur_in is None:
+                cur_in = l.time
+        elif l.log_type == "OUT":
+            if cur_in is not None:
+                today_seconds += max(0, (l.time - cur_in).total_seconds())
+                cur_in = None
+                pair_count += 1
+    if cur_in is not None:
+        today_seconds += max(0, (now_datetime() - cur_in).total_seconds())
+
+    if pair_count == 1 and cur_in is None and today_seconds >= 5 * 3600:
+        today_seconds -= 3600
+
+    t_h = int(today_seconds // 3600)
+    t_m = int((today_seconds % 3600) // 60)
+    work_hours_str = f"{t_h} giờ {t_m} phút"
+
+    # 3. Trạng thái ca làm việc hiện tại (Hỗ trợ 2 ca / nhiều ca đan xen)
+    if not last_log:
         shift_status = "NOT_CHECKED_IN"
         status_label = "Chưa vào ca"
         status_color = "#eab308"
-        work_hours_str = "0 giờ 0 phút"
-    elif today_in and not today_out:
-        shift_status = "CHECKED_IN"
-        status_label = "Đang trong ca làm việc"
+    elif last_log.log_type == "IN":
+        shift_status = "IN_SHIFT"
+        cur_shift = len(today_ins)
+        status_label = f"Đang trong Ca {cur_shift}" if cur_shift > 1 else "Đang trong ca làm việc"
         status_color = "#16a34a"
-        first_in_dt = [c.time for c in today_checkins if c.log_type == "IN"][0]
-        sec = max(0, (now_datetime() - first_in_dt).total_seconds())
-        h = int(sec // 3600)
-        m = int((sec % 3600) // 60)
-        work_hours_str = f"{h} giờ {m} phút"
     else:
-        shift_status = "CHECKED_OUT"
-        status_label = "Đã hoàn thành ca làm việc"
+        shift_status = "OUT_OF_SHIFT"
+        cur_shift = len(today_outs)
+        status_label = f"Đã hoàn thành Ca {cur_shift}" if cur_shift > 1 else "Đã hoàn thành ca làm việc"
         status_color = "#0284c7"
-        first_in_dt = [c.time for c in today_checkins if c.log_type == "IN"][0]
-        last_out_dt = [c.time for c in today_checkins if c.log_type == "OUT"][-1]
-        sec = max(0, (last_out_dt - first_in_dt).total_seconds())
-        h = int(sec // 3600)
-        m = int((sec % 3600) // 60)
-        work_hours_str = f"{h} giờ {m} phút"
+
+    # 4. Thống kê tổng số giờ làm việc trong tháng hiện tại
+    daily_data = get_daily_work_hours_and_points(emp.name)
+    month_prefix = f"{cur_year}-{cur_month}"
+    month_hours_total = sum(
+        d["hours"] for d_str, d in daily_data.items() if d_str.startswith(month_prefix)
+    )
+    month_hours_str = f"{round(month_hours_total, 1)} giờ"
 
     return {
         "employee_id": emp.name,
@@ -167,6 +195,9 @@ def get_attendance_status(user=None):
         "status_label": status_label,
         "status_color": status_color,
         "work_hours_str": work_hours_str,
+        "month_hours_total": round(month_hours_total, 1),
+        "month_hours_str": month_hours_str,
+        "cur_month": cur_month,
         "last_log": last_log_dict,
         "today_logs_count": len(today_checkins),
         "today_logs": [
@@ -219,8 +250,6 @@ def checkin(log_type="IN"):
         order_by="time asc"
     )
 
-    existing_in = next((c for c in today_checkins if c.log_type == "IN"), None)
-    existing_out = next((c for c in reversed(today_checkins) if c.log_type == "OUT"), None)
     last_log = today_checkins[-1] if today_checkins else None
 
     # 2. Khóa Cooldown 5 phút (300 giây) chống spam bấm liên tục
@@ -232,14 +261,14 @@ def checkin(log_type="IN"):
             last_time_str = last_time.strftime("%H:%M:%S") if hasattr(last_time, "strftime") else str(last_time)[11:19]
             frappe.throw(_(f"Bạn vừa mới chấm công lúc {last_time_str}. Vui lòng đợi thêm {remaining} giây (ít nhất 5 phút giữa 2 lần bấm) để tránh trùng lặp dữ liệu!"))
 
-    # 3. Quản lý logic ca làm việc chuẩn
+    # 3. Quản lý logic ca làm việc chuẩn (Đan xen IN -> OUT -> IN -> OUT hỗ trợ 2 ca / nhiều ca)
     if log_type == "IN":
-        if existing_in:
-            in_time_str = existing_in.time.strftime("%H:%M:%S") if hasattr(existing_in.time, "strftime") else str(existing_in.time)[11:19]
-            frappe.throw(_(f"Bạn đã chấm công VÀO ca lúc {in_time_str} hôm nay rồi! Mỗi ngày chỉ chấm công Vào 1 lần."))
+        if last_log and last_log.log_type == "IN":
+            in_time_str = last_log.time.strftime("%H:%M:%S") if hasattr(last_log.time, "strftime") else str(last_log.time)[11:19]
+            frappe.throw(_(f"Bạn đang trong ca làm việc (đã chấm công VÀO lúc {in_time_str})! Vui lòng bấm 'Chấm công RA' khi kết thúc ca."))
     elif log_type == "OUT":
-        if not existing_in:
-            frappe.throw(_("Bạn chưa chấm công VÀO ca hôm nay! Vui lòng bấm 'Chấm công VÀO' trước khi ra ca."))
+        if not last_log or last_log.log_type != "IN":
+            frappe.throw(_("Bạn chưa chấm công VÀO ca! Vui lòng bấm 'Chấm công VÀO' trước khi bấm ra ca."))
 
     # 4. Tính toán trạng thái Đi muộn / Về sớm
     status = "Hợp lệ"
@@ -268,28 +297,7 @@ def checkin(log_type="IN"):
 
     time_str = now.strftime("%H:%M:%S")
 
-    # 5. Nếu đã có bản ghi OUT hôm nay mà nhân viên bấm OUT tiếp (sau > 5 phút - tăng ca về muộn hơn)
-    # -> Cập nhật đè lại thời gian của bản ghi OUT hôm nay thay vì tạo thêm dòng rác!
-    if log_type == "OUT" and existing_out:
-        frappe.db.set_value("Employee Checkin", existing_out.name, {
-            "time": now,
-            "status": status,
-            "device_info": user_agent,
-            "ip_address": client_ip,
-            "wifi_ssid": wifi_ssid
-        })
-        frappe.db.commit()
-        return {
-            "success": True,
-            "name": existing_out.name,
-            "log_type": "OUT",
-            "action_label": "HẾT CA (Cập nhật giờ về)",
-            "time": time_str,
-            "status": status,
-            "message": f"✓ Đã cập nhật giờ HẾT CA mới lúc {time_str} thành công! (Trạng thái: {status})"
-        }
-
-    # Tạo bản ghi mới cho IN hoặc OUT đầu tiên
+    # Tạo bản ghi mới cho lượt chấm công
     checkin_doc = frappe.get_doc({
         "doctype": "Employee Checkin",
         "employee": emp.name,
@@ -305,7 +313,10 @@ def checkin(log_type="IN"):
     checkin_doc.insert(ignore_permissions=True)
     frappe.db.commit()
 
-    action_label = "VÀO CA (Check In)" if log_type == "IN" else "HẾT CA (Check Out)"
+    shift_num = len([c for c in today_checkins if c.log_type == "IN"]) + (1 if log_type == "IN" else 0)
+    shift_label = f"Ca {shift_num}" if shift_num > 1 else "Ca làm việc"
+    action_label = f"VÀO {shift_label}" if log_type == "IN" else f"HẾT {shift_label}"
+    msg_action = "VÀO" if log_type == "IN" else "RA"
 
     return {
         "success": True,
@@ -314,7 +325,7 @@ def checkin(log_type="IN"):
         "action_label": action_label,
         "time": time_str,
         "status": status,
-        "message": f"✓ Đã ghi nhận {action_label} thành công lúc {time_str}! (Trạng thái: {status})"
+        "message": f"✓ Đã chấm công {msg_action} {shift_label} lúc {time_str} thành công! (Trạng thái: {status})"
     }
 
 def get_daily_work_hours_and_points(employee_id):
@@ -343,30 +354,35 @@ def get_daily_work_hours_and_points(employee_id):
     today_str = nowdate()
 
     for d_str, logs in by_date.items():
-        ins = [l.time for l in logs if l.log_type == "IN"]
-        outs = [l.time for l in logs if l.log_type == "OUT"]
+        cur_in = None
+        day_seconds = 0
+        pair_count = 0
+        for l in logs:
+            if l.log_type == "IN":
+                if cur_in is None:
+                    cur_in = l.time
+            elif l.log_type == "OUT":
+                if cur_in is not None:
+                    day_seconds += max(0, (l.time - cur_in).total_seconds())
+                    cur_in = None
+                    pair_count += 1
 
-        if not ins:
-            continue
+        if cur_in is not None:
+            if d_str == today_str:
+                day_seconds += max(0, (now - cur_in).total_seconds())
+            else:
+                day_seconds += 4 * 3600
 
-        first_in = min(ins)
-        last_out = max(outs) if outs else None
+        # Nếu chỉ có 1 ca duy nhất dài >= 5 tiếng (làm xuyên trưa không bấm ra), trừ 1h nghỉ trưa
+        if pair_count == 1 and cur_in is None and day_seconds >= 5 * 3600:
+            day_seconds -= 3600
 
-        if last_out:
-            work_seconds = (last_out - first_in).total_seconds()
-        elif d_str == today_str:
-            work_seconds = (now - first_in).total_seconds()
-        else:
-            work_seconds = 8 * 3600
-
-        raw_hours = max(0.0, work_seconds / 3600.0)
-        # Giảm trừ 1h nghỉ trưa nếu ca làm việc >= 5h
-        effective_hours = raw_hours - 1.0 if raw_hours >= 5.0 else raw_hours
+        raw_hours = max(0.0, day_seconds / 3600.0)
         # 1 tiếng = 1 điểm, tối đa 8 điểm/ngày
-        points = round(min(8.0, max(0.0, effective_hours)), 1)
+        points = round(min(8.0, max(0.0, raw_hours)), 1)
 
         result[d_str] = {
-            "hours": round(effective_hours, 2),
+            "hours": round(raw_hours, 1),
             "points": points
         }
 
