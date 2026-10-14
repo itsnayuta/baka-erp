@@ -233,3 +233,103 @@ def checkin(log_type="IN"):
         "status": status,
         "message": f"✓ Đã ghi nhận {action_label} thành công lúc {time_str}! (Trạng thái: {status})"
     }
+
+def get_daily_work_hours_and_points(employee_id):
+    """
+    Tính số giờ làm việc thực tế và điểm chuyên cần theo từng ngày:
+    - Cứ tích lũy 1 tiếng làm trong ngày là 1 điểm.
+    - Càng nhiều điểm ô trên Heatmap sẽ càng xanh.
+    - Tối đa 8 điểm 1 ngày.
+    """
+    checkins = frappe.get_all(
+        "Employee Checkin",
+        filters={"employee": employee_id},
+        fields=["name", "date", "time", "log_type"],
+        order_by="time asc"
+    )
+
+    by_date = {}
+    for c in checkins:
+        d_str = str(c.date)
+        if d_str not in by_date:
+            by_date[d_str] = []
+        by_date[d_str].append(c)
+
+    result = {}
+    now = now_datetime()
+    today_str = nowdate()
+
+    for d_str, logs in by_date.items():
+        ins = [l.time for l in logs if l.log_type == "IN"]
+        outs = [l.time for l in logs if l.log_type == "OUT"]
+
+        if not ins:
+            continue
+
+        first_in = min(ins)
+        last_out = max(outs) if outs else None
+
+        if last_out:
+            work_seconds = (last_out - first_in).total_seconds()
+        elif d_str == today_str:
+            work_seconds = (now - first_in).total_seconds()
+        else:
+            work_seconds = 8 * 3600
+
+        raw_hours = max(0.0, work_seconds / 3600.0)
+        # Giảm trừ 1h nghỉ trưa nếu ca làm việc >= 5h
+        effective_hours = raw_hours - 1.0 if raw_hours >= 5.0 else raw_hours
+        # 1 tiếng = 1 điểm, tối đa 8 điểm/ngày
+        points = round(min(8.0, max(0.0, effective_hours)), 1)
+
+        result[d_str] = {
+            "hours": round(effective_hours, 2),
+            "points": points
+        }
+
+    return result
+
+@frappe.whitelist()
+def get_chuyen_can_summary(user=None):
+    """Lấy tổng điểm chuyên cần tích lũy của nhân viên"""
+    if not user:
+        user = frappe.session.user
+    if user == "Guest":
+        return {"total_points": 0, "today_points": 0}
+
+    emp = get_employee_for_user(user)
+    daily_data = get_daily_work_hours_and_points(emp.name)
+    total_points = sum(d["points"] for d in daily_data.values())
+    today_str = nowdate()
+    today_points = daily_data.get(today_str, {}).get("points", 0.0)
+
+    return {
+        "total_points": round(total_points, 1),
+        "total_points_int": int(round(total_points)),
+        "today_points": round(today_points, 1),
+        "days_worked": len(daily_data)
+    }
+
+@frappe.whitelist()
+def get_chuyen_can_heatmap_data(user=None, date=None):
+    """Trả về dữ liệu heatmap điểm chuyên cần (1 tiếng làm = 1 điểm, tối đa 8 điểm/ngày)"""
+    if not user:
+        user = frappe.session.user
+    if user == "Guest":
+        return {}
+
+    emp = get_employee_for_user(user)
+    daily_data = get_daily_work_hours_and_points(emp.name)
+
+    import time
+    heatmap_dict = {}
+    for d_str, info in daily_data.items():
+        try:
+            d_obj = getdate(d_str)
+            ts = int(time.mktime(d_obj.timetuple()))
+            heatmap_dict[str(ts)] = info["points"]
+        except Exception:
+            pass
+
+    return heatmap_dict
+

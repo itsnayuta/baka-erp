@@ -23,10 +23,78 @@ baka.attendance = {
 		const hook_controller = () => {
 			if (frappe.ui && frappe.ui.UserProfile && !frappe.ui.UserProfile.prototype._baka_attendance_hooked) {
 				frappe.ui.UserProfile.prototype._baka_attendance_hooked = true;
+
+				// 1. Hook make_user_profile để chèn widget chấm công và đổi tiêu đề các biểu đồ
 				const orig_make = frappe.ui.UserProfile.prototype.make_user_profile;
 				frappe.ui.UserProfile.prototype.make_user_profile = function () {
 					orig_make.apply(this, arguments);
 					baka.attendance.render_profile_widget(this);
+
+					// Đổi tiêu đề: "Điểm năng lượng" -> "Điểm đánh giá", "Tổng quan" -> "Tổng quan chuyên cần"
+					this.main_section.find(".line-chart-container .card-title").text(__("Điểm đánh giá"));
+					this.main_section.find(".heatmap-container .card-title").text(__("Tổng quan chuyên cần"));
+				};
+
+				// 2. Hook get_user_points: lấy Điểm đánh giá (Energy Points) và tính Điểm chuyên cần (1h làm việc = 1 điểm)
+				frappe.ui.UserProfile.prototype.get_user_points = function () {
+					return Promise.all([
+						frappe.xcall("frappe.social.doctype.energy_point_log.energy_point_log.get_user_energy_and_review_points", { user: this.user_id }),
+						frappe.xcall("erpnext.setup.wifi_attendance.get_chuyen_can_summary", { user: this.user_id })
+					]).then(([r, cc]) => {
+						if (r && r[this.user_id]) {
+							this.energy_points = r[this.user_id].energy_points || 0;
+						}
+						this.chuyen_can_points = (cc && cc.total_points != null) ? cc.total_points : 0;
+						this.review_points = this.chuyen_can_points;
+					});
+				};
+
+				// 3. Hook render_points_and_rank:
+				// - Đổi tên cột 1: Điểm đánh giá (thay cho Điểm năng lượng)
+				// - Đổi tên cột 2: Điểm chuyên cần (thay cho Điểm đánh giá cũ)
+				frappe.ui.UserProfile.prototype.render_points_and_rank = function () {
+					let $profile_details = this.wrapper.find(".user-stats");
+					let $profile_details_wrapper = this.wrapper.find(".user-stats-detail");
+					$profile_details.empty();
+
+					const _get_stat_dom = (value, label, icon) => {
+						return `<div class="user-stats-item mt-4">
+							${frappe.utils.icon(icon, "lg", "no-stroke")}
+							<div>
+								<div class="stat-value">${value}</div>
+								<div class="stat-label">${label}</div>
+							</div>
+						</div>`;
+					};
+
+					this.get_user_rank().then(() => {
+						this.get_user_points().then(() => {
+							let html = $(`
+								${_get_stat_dom(this.energy_points, __("Điểm đánh giá"), "color-energy-points")}
+								${_get_stat_dom(this.chuyen_can_points != null ? this.chuyen_can_points : this.review_points, __("Điểm chuyên cần"), "color-review-points")}
+								${_get_stat_dom(this.rank, __("Hạng"), "color-rank")}
+								${_get_stat_dom(this.month_rank, __("Hạng tháng"), "color-monthly-rank")}
+							`);
+
+							$profile_details.html(html);
+							$profile_details_wrapper.removeClass("hide");
+						});
+					});
+				};
+
+				// 4. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (1h = 1 điểm, tối đa 8 điểm/ngày)
+				frappe.ui.UserProfile.prototype.update_heatmap_data = function (date) {
+					frappe.xcall("erpnext.setup.wifi_attendance.get_chuyen_can_heatmap_data", {
+						user: this.user_id,
+						date: date
+					}).then((r) => {
+						if (this.heatmap) {
+							this.heatmap.countLabel = __("Điểm chuyên cần");
+							this.heatmap.update({
+								dataPoints: r || {}
+							});
+						}
+					});
 				};
 			}
 		};
@@ -35,7 +103,6 @@ baka.attendance = {
 
 		let debounced_timer = null;
 		frappe.router.on("change", () => {
-			// Luôn đảm bảo không có nút bấm chấm công trên Navbar
 			$(".baka-nav-checkin-item, .baka-nav-checkin-btn").remove();
 
 			let current_route = frappe.get_route();

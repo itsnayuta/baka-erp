@@ -3687,10 +3687,15 @@ Ends On,Kết thúc vào
 Ends On date cannot be before Next Contact Date.,Kết thúc Vào ngày không được trước ngày liên hệ tiếp theo.
 Energy,Năng lượng
 Energy Point Leaderboard,Bảng xếp hạng năng lượng
-Energy Point Log,Nhật ký năng lượng
-Energy Point Rule,Quy tắc điểm năng lượng
-Energy Point Settings,Cài đặt điểm năng lượng
-Energy Points,Điểm năng lượng
+Energy Point Log,Nhật ký điểm đánh giá
+Energy Point Rule,Quy tắc điểm đánh giá
+Energy Point Settings,Cài đặt điểm đánh giá
+Energy Points,Điểm đánh giá
+Energy Points:,Điểm đánh giá:
+Review Points,Điểm chuyên cần
+Review Points:,Điểm chuyên cần:
+Give Review Points,Tặng điểm đánh giá
+Điểm năng lượng,Điểm đánh giá
 Engineer,Kỹ sư
 Enough Parts to Build,Phần đủ để xây dựng
 Enroll,Ghi danh

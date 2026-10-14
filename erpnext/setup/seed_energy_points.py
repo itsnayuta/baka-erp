@@ -191,13 +191,7 @@ def seed():
 
         print(f"✓ Đã nạp dữ liệu Điểm Năng Lượng cho: {u}")
 
-    # 4. Khởi tạo dữ liệu Chấm Công thực tế cho tháng này
-    # Lấy các ngày làm việc trong tháng hiện tại (từ ngày 01 đến hôm nay)
-    today = getdate(nowdate())
-    cur_year = today.year
-    cur_month = today.month
-
-    # Xóa checkin cũ để tạo bộ dữ liệu sạch
+    # 4. Khởi tạo dữ liệu Chấm Công thực tế cho 40 ngày qua (phục vụ Heatmap Chuyên Cần)
     frappe.db.sql("DELETE FROM `tabEmployee Checkin`")
 
     sample_employees = [
@@ -215,20 +209,47 @@ def seed():
             continue
         emp = get_employee_for_user(emp_info["user"])
 
-        # Tạo lịch sử chấm công cho các ngày từ ngày 1 đến ngày hôm nay
-        for day in range(1, today.day + 1):
-            date_str = f"{cur_year:04d}-{cur_month:02d}-{day:02d}"
+        # Tạo lịch sử chấm công cho 40 ngày qua
+        for days_back in range(40, -1, -1):
+            date_str = add_days(nowdate(), -days_back)
             d_obj = getdate(date_str)
             # Bỏ qua Chủ nhật (weekday = 6)
             if d_obj.weekday() == 6:
                 continue
 
-            # Đi muộn vào một vài ngày ngẫu nhiên để thống kê hiển thị thực tế
-            is_late = (day in [3, 8])
-            in_minute = random.randint(35, 45) if is_late else random.randint(15, 28)
-            in_second = random.randint(10, 55)
-            status_in = "Đi muộn" if is_late else "Hợp lệ"
-            in_time_str = f"{date_str} 08:{in_minute:02d}:{in_second:02d}"
+            # Phân bổ số giờ làm việc đa dạng để kiểm tra độ xanh của Heatmap (từ 1 đến 8 điểm):
+            # - Thứ 7 (weekday = 5): Làm nửa ngày (4 tiếng -> 4 điểm)
+            # - Ngày ngẫu nhiên: Về sớm (6 tiếng -> 6 điểm) hoặc họp ngắn (2 tiếng -> 2 điểm)
+            # - Các ngày thường còn lại: Đủ ca 8 tiếng (8 điểm - xanh đậm nhất)
+            if d_obj.weekday() == 5:
+                # Thứ 7: làm 4 tiếng (08:30 - 12:30 -> 4 điểm)
+                in_time_str = f"{date_str} 08:30:15"
+                out_time_str = f"{date_str} 12:30:45"
+                status_in = "Hợp lệ"
+            elif days_back in [5, 17, 27]:
+                # Về sớm: 6 tiếng (08:30 - 15:30 trừ 1h ăn trưa -> 6 điểm)
+                in_time_str = f"{date_str} 08:28:10"
+                out_time_str = f"{date_str} 15:30:20"
+                status_in = "Hợp lệ"
+            elif days_back in [11, 23]:
+                # Ngày đi muộn nhẹ (08:42 - 17:35 -> ~7.8 điểm)
+                in_time_str = f"{date_str} 08:42:15"
+                out_time_str = f"{date_str} 17:35:10"
+                status_in = "Đi muộn"
+            elif days_back in [33]:
+                # Đi công tác nửa buổi: 2 tiếng (08:30 - 10:30 -> 2 điểm)
+                in_time_str = f"{date_str} 08:30:00"
+                out_time_str = f"{date_str} 10:30:00"
+                status_in = "Hợp lệ"
+            else:
+                # Ngày tiêu chuẩn: ~8.5h làm việc (trừ 1h trưa -> 7.5 - 8.0 điểm, max 8)
+                in_m = random.randint(15, 28)
+                in_s = random.randint(10, 55)
+                in_time_str = f"{date_str} 08:{in_m:02d}:{in_s:02d}"
+                out_m = random.randint(31, 45)
+                out_s = random.randint(10, 55)
+                out_time_str = f"{date_str} 17:{out_m:02d}:{out_s:02d}"
+                status_in = "Hợp lệ"
 
             # Log VÀO (IN)
             checkin_in = frappe.get_doc({
@@ -245,11 +266,8 @@ def seed():
             })
             checkin_in.insert(ignore_permissions=True)
 
-            # Log RA (OUT) - Nếu là ngày hôm nay thì chỉ check-in vào, hoặc check-out nếu chiều
-            if day < today.day:
-                out_minute = random.randint(31, 45)
-                out_second = random.randint(10, 55)
-                out_time_str = f"{date_str} 17:{out_minute:02d}:{out_second:02d}"
+            # Log RA (OUT) - Ngày hôm nay (days_back = 0) chỉ check-in sáng
+            if days_back > 0:
                 checkin_out = frappe.get_doc({
                     "doctype": "Employee Checkin",
                     "employee": emp.name,
@@ -264,7 +282,7 @@ def seed():
                 })
                 checkin_out.insert(ignore_permissions=True)
 
-        print(f"✓ Đã nạp lịch sử chấm công tháng này cho: {emp.employee_name} ({emp_info['user']})")
+        print(f"✓ Đã nạp lịch sử chấm công 40 ngày cho: {emp.employee_name} ({emp_info['user']})")
 
     frappe.db.commit()
-    print("=== Hoàn tất nạp dữ liệu Điểm Năng Lượng & Chấm Công mẫu ===")
+    print("=== Hoàn tất nạp dữ liệu Điểm Đánh Giá & Điểm Chuyên Cần mẫu ===")
