@@ -304,12 +304,12 @@ baka.attendance = {
 
 			let action_section_html = "";
 			if (is_own_profile) {
-				if (s.is_limit_reached || s.today_logs_count >= 5) {
+				if (s.is_limit_reached || s.today_logs_count >= 10) {
 					action_section_html = `
 						<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; width: 100%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
 							<div style="color: #b91c1c; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
 								<i class="fa fa-exclamation-triangle" style="font-size: 18px; color: #dc2626;"></i>
-								<span>Bạn đã đạt tối đa 5 lần chấm công trong ngày hôm nay (${s.today_logs_count}/5 lần). <b>Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!</b></span>
+								<span>Bạn đã đạt tối đa 10 lần chấm công trong ngày hôm nay. <b>Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!</b></span>
 							</div>
 							<button class="btn btn-default" disabled style="opacity: 0.65; cursor: not-allowed; font-weight: 600; font-size: 13px; color: #dc2626; border-color: #fca5a5; background: #fff;">
 								<i class="fa fa-lock" style="margin-right: 4px;"></i> Đã khóa nút chấm công
@@ -318,15 +318,12 @@ baka.attendance = {
 					`;
 				} else {
 					let checkin_buttons = "";
-					let remaining = s.remaining_logs != null ? s.remaining_logs : Math.max(0, 5 - (s.today_logs_count || 0));
-					let remaining_badge = `<span style="font-size: 11px; background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 12px; font-weight: 600; margin-left: 4px;" title="Mỗi ngày tối đa 5 lượt chấm công">Còn ${remaining}/5 lần</span>`;
 
 					if (s.shift_status === "NOT_CHECKED_IN") {
 						checkin_buttons = `
 							<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
 								<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Check In)
 							</button>
-							${remaining_badge}
 						`;
 					} else if (s.shift_status === "IN_SHIFT") {
 						checkin_buttons = `
@@ -337,7 +334,6 @@ baka.attendance = {
 							<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
 								<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
 							</button>
-							${remaining_badge}
 						`;
 					} else {
 						checkin_buttons = `
@@ -348,7 +344,6 @@ baka.attendance = {
 							<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
 								<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Ca tiếp theo)
 							</button>
-							${remaining_badge}
 						`;
 					}
 

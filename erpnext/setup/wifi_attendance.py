@@ -156,11 +156,11 @@ def get_attendance_status(user=None):
     t_m = int((today_seconds % 3600) // 60)
     work_hours_str = f"{t_h} giờ {t_m} phút"
 
-    # 3. Trạng thái ca làm việc hiện tại (Hỗ trợ 2 ca / nhiều ca đan xen & giới hạn 5 lần/ngày)
-    is_limit_reached = len(today_checkins) >= 5
+    # 3. Trạng thái ca làm việc hiện tại (Hỗ trợ 2 ca / nhiều ca đan xen & giới hạn 10 lần/ngày)
+    is_limit_reached = len(today_checkins) >= 10
     if is_limit_reached:
         shift_status = "LIMIT_REACHED"
-        status_label = "Đã đạt giới hạn 5 lần/ngày"
+        status_label = "Đã đạt giới hạn 10 lần/ngày"
         status_color = "#dc2626"
     elif not last_log:
         shift_status = "NOT_CHECKED_IN"
@@ -204,8 +204,8 @@ def get_attendance_status(user=None):
         "month_hours_str": month_hours_str,
         "cur_month": cur_month,
         "is_limit_reached": is_limit_reached,
-        "max_daily_logs": 5,
-        "remaining_logs": max(0, 5 - len(today_checkins)),
+        "max_daily_logs": 10,
+        "remaining_logs": max(0, 10 - len(today_checkins)),
         "last_log": last_log_dict,
         "today_logs_count": len(today_checkins),
         "today_logs": [
@@ -250,7 +250,7 @@ def checkin(log_type="IN"):
     now = now_datetime()
     today = nowdate()
 
-    # 1. Kiểm tra giới hạn tối đa 5 lần chấm công trong ngày
+    # 1. Kiểm tra giới hạn tối đa 10 lần chấm công trong ngày
     today_checkins = frappe.get_all(
         "Employee Checkin",
         filters={"employee": emp.name, "date": today},
@@ -258,8 +258,8 @@ def checkin(log_type="IN"):
         order_by="time asc"
     )
 
-    if len(today_checkins) >= 5:
-        frappe.throw(_("Bạn đã đạt giới hạn tối đa 5 lần chấm công trong ngày hôm nay. Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"))
+    if len(today_checkins) >= 10:
+        frappe.throw(_("Bạn đã đạt giới hạn tối đa 10 lần chấm công trong ngày hôm nay. Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"))
 
     last_log = today_checkins[-1] if today_checkins else None
 

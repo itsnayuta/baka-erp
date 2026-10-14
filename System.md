@@ -87,13 +87,13 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
      - Đang trong ca: Giao diện tự động chuyển sang duy nhất nút **`Chấm công RA`**, hiển thị rõ ca đang làm và thời gian làm việc. Chặn không cho phép bấm VÀO tiếp.
      - **Khóa nút bấm tức thì (Click Lock):** Nút bấm lập tức vô hiệu hóa khi chạm chuột/màn hình cảm ứng trong lúc gửi dữ liệu để triệt tiêu lỗi double-click.
 
-4. **Giới hạn 5 lần chấm công/ngày & Khóa nút an toàn:**
-   - Mỗi nhân viên chỉ được phép thực hiện tối đa **5 lần chấm công (check-in / check-out)** trong một ngày.
-   - Hiển thị huy hiệu số lượt còn lại trực quan (ví dụ: `Còn 4/5 lần`).
-   - **Khi đạt mốc 5 lần:**
+4. **Giới hạn 10 lần chấm công/ngày & Khóa nút an toàn:**
+   - Mỗi nhân viên được phép thực hiện tối đa **10 lần chấm công (check-in / check-out)** trong một ngày mà không bị giới hạn cooldown.
+   - Giao diện không hiển thị số lần đếm để tránh gây rối mắt cho người dùng.
+   - **Khi đạt mốc 10 lần:**
      - Hệ thống lập tức **khóa hoàn toàn nút chấm công** cho ngày hôm đó.
-     - Hiển thị banner cảnh báo màu đỏ: *"Bạn đã đạt tối đa 5 lần chấm công trong ngày hôm nay (5/5 lần). Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"*
-     - Mọi yêu cầu chấm công vượt quá 5 lần từ API/Backend đều bị từ chối và yêu cầu liên hệ Ban lãnh đạo.
+     - Hiển thị banner cảnh báo màu đỏ: *"Bạn đã đạt tối đa 10 lần chấm công trong ngày hôm nay. Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"*
+     - Mọi yêu cầu chấm công vượt quá 10 lần từ API/Backend đều bị từ chối và yêu cầu liên hệ Ban lãnh đạo.
 
 5. **Tính giờ làm việc & Điểm chuyên cần chuẩn xác:**
    - Tổng thời gian làm việc được tính theo tổng độ dài của từng cặp ca thực tế: $\sum (\text{RA}_i - \text{VÀO}_i)$.
