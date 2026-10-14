@@ -106,6 +106,36 @@ def run():
     except Exception as e:
         print(f"! Currency & Exchange Rate setup notice: {e}")
 
+    # 1.4. Phân quyền đọc dữ liệu dùng chung (Tiền tệ, Bảng giá, Trung tâm chi phí cho Kho và các bộ phận)
+    try:
+        from frappe.permissions import add_permission
+        shared_perms = [
+            ("Currency", "All", "read"),
+            ("Currency", "Stock User", "read"),
+            ("Currency", "Stock Manager", "read"),
+            ("Currency Exchange", "All", "read"),
+            ("Currency Exchange", "Stock User", "read"),
+            ("Currency Exchange", "Stock Manager", "read"),
+            ("Price List", "Stock User", "read"),
+            ("Price List", "Stock Manager", "read"),
+            ("Item Price", "Sales User", "read"),
+            ("Item Price", "Stock User", "read"),
+            ("Item Price", "Stock Manager", "read"),
+            ("Cost Center", "Stock User", "read"),
+            ("Cost Center", "Stock Manager", "read"),
+            ("Customer Group", "Stock User", "read"),
+            ("Customer Group", "Stock Manager", "read"),
+        ]
+        for dt, role, ptype in shared_perms:
+            try:
+                if not frappe.db.exists("Custom DocPerm", {"parent": dt, "role": role, "permlevel": 0}):
+                    add_permission(dt, role, 0, ptype)
+            except Exception:
+                pass
+        print("✓ Đã cấu hình phân quyền đọc dữ liệu danh mục Tiền tệ, Bảng giá, Trung tâm chi phí cho các bộ phận")
+    except Exception as e:
+        print(f"! Shared perms setup notice: {e}")
+
     # 2. Setup Vietnam Address Template
     from erpnext.regional.address_template.setup import update_address_template
     vn_template = """{{ address_line1 }}<br>
