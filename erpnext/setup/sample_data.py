@@ -763,3 +763,41 @@ def get_energy_points_heatmap_data(user: str, date: str | None = None):
     except Exception as e:
         print("! Bỏ qua patch py:", e)
 
+    # 3. Patch user_profile.html: Loại bỏ Type Distribution và Recent Activity
+    html_path = "/home/frappe/frappe-bench/apps/frappe/frappe/desk/page/user_profile/user_profile.html"
+    try:
+        minimal_html = """<div class="row user-profile">
+	<div class="col-md-12">
+		<div class="performance-graphs">
+			<div class="frappe-card chart-column-container heatmap-container hidden-xs hidden-sm">
+				<div class="title-area">
+					<h4 class="card-title">{%=__("Overview") %}</h4>
+					<div class="card-options heatmap-options"></div>
+				</div>
+				<div class="chart-wrapper performance-heatmap">
+					<div class="null-state">
+						<span>{%=__("No Data to Show") %}</span>
+					</div>
+				</div>
+			</div>
+			<div class="frappe-card chart-column-container line-chart-container">
+				<div class="title-area">
+					<h4 class="card-title">{%=__("Energy Points") %}</h4>
+					<div class="card-options line-chart-options"></div>
+				</div>
+				<div class="chart-wrapper performance-line-chart">
+					<div class="null-state">
+						<span>{%=__("No Data to Show") %}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+"""
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(minimal_html)
+        print("✓ Đã tối giản user_profile.html (loại bỏ Type Distribution và Recent Activity)")
+    except Exception as e:
+        print("! Bỏ qua patch html:", e)
+

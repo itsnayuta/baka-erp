@@ -1,6 +1,39 @@
 import frappe
 from frappe import _
 
+def test_profile_logic():
+    from erpnext.setup.wifi_attendance import (
+        get_attendance_status, get_chuyen_can_summary, get_chuyen_can_heatmap_data
+    )
+    from frappe.social.doctype.energy_point_log.energy_point_log import get_user_energy_and_review_points
+
+    users = ["chutich@baka.vn", "coo@baka.vn", "sale1@baka.vn", "sale2@baka.vn", "kho@baka.vn"]
+    print("=== TESTING MY PROFILE LOGIC FOR ALL USERS ===")
+    
+    for u in users:
+        print(f"\n--- User: {u} ---")
+        # 1. Attendance Status
+        status = get_attendance_status(u)
+        print(f"  Attendance: Employee={status.get('employee_id')} ({status.get('employee_name')}), In={status.get('today_in')}, Out={status.get('today_out')}, Total Days Worked={status.get('stats', {}).get('total_days')}, On-time={status.get('stats', {}).get('on_time_count')}")
+        
+        # 2. Điểm chuyên cần (1h làm việc = 1 điểm, max 8đ/ngày)
+        cc = get_chuyen_can_summary(u)
+        print(f"  Chuyên cần: Total Points={cc.get('total_points')}, Today Points={cc.get('today_points')}, Days Worked={cc.get('days_worked')}")
+        
+        # 3. Heatmap Data
+        hm = get_chuyen_can_heatmap_data(u)
+        max_pt = max(hm.values()) if hm else 0
+        min_pt = min(hm.values()) if hm else 0
+        print(f"  Heatmap: {len(hm)} data points, Min Daily Point={min_pt}, Max Daily Point={max_pt} (Expected <= 8.0)")
+        assert max_pt <= 8.0, f"Error: Daily point exceeds 8.0: {max_pt}"
+        
+        # 4. Điểm đánh giá (Energy Points)
+        ep = get_user_energy_and_review_points(u)
+        user_ep = ep.get(u, {}).get("energy_points", 0) if ep else 0
+        print(f"  Điểm đánh giá (Energy Points): {user_ep}")
+
+    print("\n✓ ALL MY PROFILE LOGIC TESTS PASSED SUCCESSFULLY!")
+
 def run():
     print("=== Configuring ERP for Vietnam (BAKAERP) ===")
     

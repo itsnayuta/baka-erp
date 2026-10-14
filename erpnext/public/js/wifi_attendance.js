@@ -34,6 +34,13 @@ baka.attendance = {
 		// 1. Loại bỏ hoàn toàn nút Chấm công trên thanh Navbar (chỉ chấm công trong My Profile)
 		$(".baka-nav-checkin-item, .baka-nav-checkin-btn").remove();
 
+		// CSS ẩn triệt để phần Phân phối loại (Type Distribution) và Hoạt động gần đây (Recent Activity)
+		frappe.dom.set_style(`
+			.percentage-chart-container, .recent-activity {
+				display: none !important;
+			}
+		`);
+
 		// 2. Thiết lập hook tích hợp trực tiếp vào màn hình My Profile
 		this.setup_profile_hook();
 	},
@@ -43,11 +50,14 @@ baka.attendance = {
 			if (frappe.ui && frappe.ui.UserProfile && !frappe.ui.UserProfile.prototype._baka_attendance_hooked) {
 				frappe.ui.UserProfile.prototype._baka_attendance_hooked = true;
 
-				// 1. Hook make_user_profile để chèn widget chấm công và đổi tiêu đề các biểu đồ
+				// 1. Hook make_user_profile để chèn widget chấm công và dọn dẹp các khối thừa
 				const orig_make = frappe.ui.UserProfile.prototype.make_user_profile;
 				frappe.ui.UserProfile.prototype.make_user_profile = function () {
 					orig_make.apply(this, arguments);
 					baka.attendance.render_profile_widget(this);
+
+					// Loại bỏ hoàn toàn phần Type Distribution và Recent Activity khỏi DOM
+					this.main_section.find(".percentage-chart-container, .recent-activity").remove();
 
 					// Đổi tiêu đề: "Điểm năng lượng" -> "Điểm đánh giá", "Tổng quan" -> "Tổng quan chuyên cần"
 					this.main_section.find(".line-chart-container .card-title").text(__("Điểm đánh giá"));
@@ -56,6 +66,11 @@ baka.attendance = {
 						this.heatmap.countLabel = __("Điểm chuyên cần");
 					}
 				};
+
+				// Triệt tiêu các hàm xử lý tính toán và gọi API thừa cho Type Distribution & Recent Activity
+				frappe.ui.UserProfile.prototype.render_percentage_chart = function () {};
+				frappe.ui.UserProfile.prototype.create_percentage_chart_filters = function () {};
+				frappe.ui.UserProfile.prototype.setup_user_activity_timeline = function () {};
 
 				// 2. Hook render_heatmap: đảm bảo countLabel lúc khởi tạo chart luôn là "Điểm chuyên cần"
 				frappe.ui.UserProfile.prototype.render_heatmap = function () {
