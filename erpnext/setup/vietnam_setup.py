@@ -206,7 +206,10 @@ Việt Nam"""
     frappe.db.set_default("fiscal_year", "2026")
     if frappe.db.exists("DocType", "Global Defaults"):
         frappe.db.set_single_value("Global Defaults", "current_fiscal_year", "2026")
-    print("✓ Set default active Fiscal Year to 2026")
+        frappe.db.set_single_value("Global Defaults", "default_currency", "VND")
+        frappe.db.set_single_value("Global Defaults", "country", country_name)
+        frappe.db.set_single_value("Global Defaults", "default_company", "BAKA")
+    print("✓ Set default active Fiscal Year to 2026 and Global Defaults")
 
     frappe.db.commit()
     print("=== BAKAERP Vietnam Configuration Complete ===")

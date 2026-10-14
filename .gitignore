@@ -5,10 +5,8 @@ conf.py
 locale
 latest_updates.json
 .wnf-lang-status
-*.egg-info
-dist/
-erpnext/public/dist
-erpnext/docs/current
+/dist/
+!erpnext/public/dist/
 *.swp
 *.swo
 __pycache__

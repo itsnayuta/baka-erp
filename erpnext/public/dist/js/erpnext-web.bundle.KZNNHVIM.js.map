@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../apps/erpnext/erpnext/public/js/website_utils.js"],
+  "sourcesContent": ["// Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors\r\n// License: GNU General Public License v3. See license.txt\r\n\r\nif (!window.erpnext) window.erpnext = {};\r\n\r\nerpnext.subscribe_to_newsletter = function (opts, btn) {\r\n\treturn frappe.call({\r\n\t\ttype: \"POST\",\r\n\t\tmethod: \"frappe.email.doctype.newsletter.newsletter.subscribe\",\r\n\t\tbtn: btn,\r\n\t\targs: { email: opts.email },\r\n\t\tcallback: opts.callback,\r\n\t});\r\n};\r\n"],
+  "mappings": "MAGK,OAAO,UAAS,OAAO,QAAU,CAAC,GAEvC,QAAQ,wBAA0B,SAAUA,EAAMC,EAAK,CACtD,OAAO,OAAO,KAAK,CAClB,KAAM,OACN,OAAQ,uDACR,IAAKA,EACL,KAAM,CAAE,MAAOD,EAAK,KAAM,EAC1B,SAAUA,EAAK,QAChB,CAAC,CACF",
+  "names": ["opts", "btn"]
+}

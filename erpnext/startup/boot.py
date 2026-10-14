@@ -64,6 +64,11 @@ def boot_session(bootinfo):
 		)
 		if fiscal_year:
 			bootinfo.current_fiscal_year = fiscal_year[0]
+			bootinfo.sysdefaults.fiscal_year = fiscal_year[0][0]
+			bootinfo.sysdefaults.current_fiscal_year = fiscal_year[0][0]
+		else:
+			bootinfo.sysdefaults.fiscal_year = "2026"
+			bootinfo.sysdefaults.current_fiscal_year = "2026"
 		bootinfo.party_account_types = frappe._dict(party_account_types)
 
 		bootinfo.sysdefaults.demo_company = frappe.db.get_single_value("Global Defaults", "demo_company")
