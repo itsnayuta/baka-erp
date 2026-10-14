@@ -10729,7 +10729,7 @@ Total {0} ({1}),Tổng số {0} ({1})
 "Total {0} for all items is zero, may you should change 'Distribute Charges Based On'",Tổng None
 Total(Amt),Tổng số (Amt)
 Total(Qty),Tổng số (SL)
-Totals,{0}{/0}{1}{/1} {2}{/2}Tổng giá trị
+Totals,Tổng giá trị
 Traceability,Truy xuất nguồn gốc
 Traceback,Tìm lại
 Track Leads by Lead Source.,Theo dõi theo Leads Nguồn.

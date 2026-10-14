@@ -640,16 +640,16 @@ def setup_energy_points_october():
             "user": "kho@baka.vn",
             "review_points": 30,
             "entries": [
-                {"date": "2026-10-01 09:30:00", "points": 20, "type": "Auto", "rule": None, "dt": "Sales Order", "dn": sales_orders[0], "reason": "Tiếp nhận và nhập kho hoàn tất 1.600 hộp thành phẩm chính xác"},
+                {"date": "2026-10-01 09:30:00", "points": 20, "type": "Auto", "rule": "On Sales Order Submission", "dt": "Sales Order", "dn": sales_orders[0], "reason": "Tiếp nhận và nhập kho hoàn tất 1.600 hộp thành phẩm chính xác"},
                 {"date": "2026-10-05 11:00:00", "points": 15, "type": "Appreciation", "rule": None, "dt": "Sales Order", "dn": sales_orders[1], "owner": "coo@baka.vn", "reason": "Đóng gói và xuất hàng siêu tốc cho đơn Healthy Mart"},
-                {"date": "2026-10-10 14:00:00", "points": 15, "type": "Auto", "rule": None, "dt": "Sales Order", "dn": sales_orders[3], "reason": "Xuất kho giao hàng đúng hẹn không sai lệch"},
+                {"date": "2026-10-10 14:00:00", "points": 15, "type": "Auto", "rule": "On Sales Order Submission", "dt": "Sales Order", "dn": sales_orders[3], "reason": "Xuất kho giao hàng đúng hẹn không sai lệch"},
             ]
         },
         {
             "user": "coo@baka.vn",
             "review_points": 100,
             "entries": [
-                {"date": "2026-10-01 10:00:00", "points": 50, "type": "Auto", "rule": None, "dt": "Sales Order", "dn": sales_orders[0], "reason": "Phê duyệt kế hoạch bán hàng & tồn kho tháng 10"},
+                {"date": "2026-10-01 10:00:00", "points": 50, "type": "Auto", "rule": "On Sales Order Submission", "dt": "Sales Order", "dn": sales_orders[0], "reason": "Phê duyệt kế hoạch bán hàng & tồn kho tháng 10"},
                 {"date": "2026-10-08 17:00:00", "points": 50, "type": "Appreciation", "rule": None, "dt": "Sales Order", "dn": sales_orders[2], "owner": "chutich@baka.vn", "reason": "Lãnh đạo xuất sắc: Vận hành trơn tru chuỗi cung ứng thức uống"},
             ]
         },
@@ -657,8 +657,8 @@ def setup_energy_points_october():
             "user": "chutich@baka.vn",
             "review_points": 200,
             "entries": [
-                {"date": "2026-10-01 09:00:00", "points": 100, "type": "Auto", "rule": None, "dt": "Sales Order", "dn": sales_orders[0], "reason": "Thông qua chiến lược phát triển 3 dòng sản phẩm Tinh bột kháng"},
-                {"date": "2026-10-10 17:00:00", "points": 100, "type": "Auto", "rule": None, "dt": "Sales Order", "dn": sales_orders[3], "reason": "Khen thưởng và đánh giá hiệu quả tháng 10 toàn bộ phận"},
+                {"date": "2026-10-01 09:00:00", "points": 100, "type": "Auto", "rule": "On Sales Order Submission", "dt": "Sales Order", "dn": sales_orders[0], "reason": "Thông qua chiến lược phát triển 3 dòng sản phẩm Tinh bột kháng"},
+                {"date": "2026-10-10 17:00:00", "points": 100, "type": "Auto", "rule": "On Sales Order Submission", "dt": "Sales Order", "dn": sales_orders[3], "reason": "Khen thưởng và đánh giá hiệu quả tháng 10 toàn bộ phận"},
             ]
         }
     ]

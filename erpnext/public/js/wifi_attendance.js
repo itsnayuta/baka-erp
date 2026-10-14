@@ -2,6 +2,25 @@
 // WiFi-based Employee Attendance and Check-in / Check-out Module
 
 frappe.provide("baka.attendance");
+frappe.provide("frappe.energy_points");
+
+// Phòng vệ lỗi null.bold() khi hệ thống hiển thị timeline của Energy Point Log
+if (frappe.energy_points) {
+	const orig_get_form_log = frappe.energy_points.get_form_log_message;
+	frappe.energy_points.get_form_log_message = function (log) {
+		if (log && log.type === "Auto" && !log.rule) {
+			log.rule = __("Hệ thống");
+		}
+		return orig_get_form_log ? orig_get_form_log.apply(this, arguments) : "";
+	};
+	const orig_format_history = frappe.energy_points.format_history_log;
+	frappe.energy_points.format_history_log = function (log) {
+		if (log && log.type === "Auto" && !log.rule) {
+			log.rule = __("Hệ thống");
+		}
+		return orig_format_history ? orig_format_history.apply(this, arguments) : "";
+	};
+}
 
 baka.attendance = {
 	status: null,
