@@ -8,19 +8,27 @@ def run():
     frappe.db.set_value("Company", company, "round_off_cost_center", "Main - B")
 
     # 1. Tạo các tài khoản người dùng chuẩn theo cơ cấu doanh nghiệp
+    full_executive_roles = [
+        "System Manager", "Sales Manager", "Sales User", "Sales Master Manager",
+        "Accounts Manager", "Accounts User", "Stock Manager", "Stock User",
+        "Purchase Manager", "Purchase User", "HR Manager", "HR User",
+        "Support Team", "Item Manager", "Report Manager", "Dashboard Manager",
+        "Workspace Manager", "Desk User", "Auditor", "Analytics"
+    ]
+
     users = [
         {
             "email": "chutich@baka.vn",
             "first_name": "Bùi",
             "last_name": "Chủ Tịch",
-            "roles": ["System Manager", "Desk User"],
-            "bio": "Chủ tịch Hội đồng Quản trị - Theo dõi báo cáo, chỉ số vĩ mô"
+            "roles": full_executive_roles,
+            "bio": "Chủ tịch Hội đồng Quản trị - Quyền quản trị tối cao, kiểm soát toàn bộ hệ thống"
         },
         {
             "email": "coo@baka.vn",
             "first_name": "Trần",
             "last_name": "Vận Hành",
-            "roles": ["System Manager", "Sales Manager", "Support Team", "Accounts Manager", "Desk User"],
+            "roles": full_executive_roles,
             "bio": "Giám đốc Vận hành (COO) - Điều phối bán hàng, duyệt đơn, giám sát tiến độ"
         },
         {
