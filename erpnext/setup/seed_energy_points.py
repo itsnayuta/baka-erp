@@ -286,3 +286,43 @@ def seed():
 
     frappe.db.commit()
     print("=== Hoàn tất nạp dữ liệu Điểm Đánh Giá & Điểm Chuyên Cần mẫu ===")
+
+def patch_frappe_files():
+    # 1. Patch user_profile_controller.js
+    js_path = "/home/frappe/frappe-bench/apps/frappe/frappe/desk/page/user_profile/user_profile_controller.js"
+    try:
+        with open(js_path, "r", encoding="utf-8") as f:
+            js_code = f.read()
+        target_js = 'countLabel: __("Energy Points"),'
+        replacement_js = 'countLabel: __("Điểm chuyên cần"),'
+        if target_js in js_code:
+            js_code = js_code.replace(target_js, replacement_js)
+            with open(js_path, "w", encoding="utf-8") as f:
+                f.write(js_code)
+            print("✓ Đã cập nhật countLabel thành 'Điểm chuyên cần' trong user_profile_controller.js")
+    except Exception as e:
+        print("Lỗi patch js:", e)
+
+    # 2. Patch user_profile.py
+    py_path = "/home/frappe/frappe-bench/apps/frappe/frappe/desk/page/user_profile/user_profile.py"
+    try:
+        with open(py_path, "r", encoding="utf-8") as f:
+            py_code = f.read()
+        if "from erpnext.setup.wifi_attendance import get_chuyen_can_heatmap_data" not in py_code:
+            target_py = 'def get_energy_points_heatmap_data(user: str, date: str | None):'
+            replacement_py = '''def get_energy_points_heatmap_data(user: str, date: str | None = None):
+	try:
+		from erpnext.setup.wifi_attendance import get_chuyen_can_heatmap_data
+		res = get_chuyen_can_heatmap_data(user, date)
+		if res:
+			return res
+	except Exception:
+		pass'''
+            if target_py in py_code:
+                py_code = py_code.replace(target_py, replacement_py)
+                with open(py_path, "w", encoding="utf-8") as f:
+                    f.write(py_code)
+                print("✓ Đã cập nhật get_energy_points_heatmap_data trong user_profile.py")
+    except Exception as e:
+        print("Lỗi patch py:", e)
+
