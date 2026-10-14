@@ -334,8 +334,8 @@ def get_daily_work_hours_and_points(employee_id, year=None):
     """
     Tính số giờ làm việc thực tế và điểm chuyên cần theo từng ngày:
     - Tính theo năm (mỗi năm reset 1 lần).
-    - Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân).
-    - Dưới 8 tiếng = 0 điểm.
+    - Cứ tròn 1 tiếng là 1 điểm, không lấy thập phân (tối đa 8 điểm/ngày).
+    - Mốc 2, 4, 6, 8 điểm trên biểu đồ Tổng quan chuyên cần (Heatmap).
     """
     filters = {"employee": employee_id}
     if year:
@@ -385,12 +385,12 @@ def get_daily_work_hours_and_points(employee_id, year=None):
             day_seconds -= 3600
 
         raw_hours = max(0.0, day_seconds / 3600.0)
-        # Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân)
-        points = 1 if raw_hours >= 8.0 else 0
+        # Cứ tròn 1 tiếng là 1 điểm, không lấy thập phân, tối đa 8 điểm/ngày
+        points = min(8, int(raw_hours))
 
         result[d_str] = {
             "hours": round(raw_hours, 1),
-            "points": points
+            "points": int(points)
         }
 
     return result
@@ -400,7 +400,7 @@ def get_chuyen_can_summary(user=None, year=None):
     """
     Lấy tổng điểm chuyên cần tích lũy trong năm của nhân viên:
     - Tính theo năm (hết 1 năm thì reset 1 lần).
-    - Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân).
+    - Cứ tròn 1 tiếng là 1 điểm, không lấy thập phân (tối đa 8 điểm/ngày).
     """
     if not user:
         user = frappe.session.user
@@ -420,14 +420,15 @@ def get_chuyen_can_summary(user=None, year=None):
         "total_points_int": int(total_points),
         "today_points": int(today_points),
         "days_worked": len(daily_data),
-        "qualified_days": int(total_points)
+        "qualified_days": len([d for d in daily_data.values() if d["points"] >= 8])
     }
 
 @frappe.whitelist()
 def get_chuyen_can_heatmap_data(user=None, date=None):
     """
     Trả về dữ liệu heatmap điểm chuyên cần theo năm:
-    - Cứ đủ 8 tiếng = 1 điểm, dưới 8 tiếng = 0 điểm.
+    - Cứ tròn 1 tiếng = 1 điểm, tối đa 8 điểm/ngày (mốc 2, 4, 6, 8 điểm).
+    - Không lấy phần thập phân (số nguyên).
     - Reset theo từng năm.
     """
     if not user:
@@ -445,8 +446,8 @@ def get_chuyen_can_heatmap_data(user=None, date=None):
         try:
             d_obj = getdate(d_str)
             ts = int(time.mktime(d_obj.timetuple()))
-            # Chỉ ghi nhận điểm khi >= 1 (đủ 8 tiếng) để hiển thị ô xanh trên Heatmap
-            if info["points"] >= 1:
+            # Ghi nhận điểm chuyên cần > 0 vào heatmap (các mốc 2, 4, 6, 8 điểm)
+            if info["points"] > 0:
                 heatmap_dict[str(ts)] = int(info["points"])
         except Exception:
             pass

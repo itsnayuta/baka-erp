@@ -577,6 +577,14 @@ def setup_attendance_october():
             if d_obj.weekday() == 5:
                 in_time = f"{date_str} 08:30:15"
                 out_time = f"{date_str} 12:30:45"
+            elif day == 6:
+                # Mốc 6 điểm: Làm 7 tiếng trừ 1h nghỉ trưa -> 6 tiếng -> 6 điểm
+                in_time = f"{date_str} 08:20:15"
+                out_time = f"{date_str} 15:20:30"
+            elif day == 8:
+                # Mốc 2 điểm: Làm 2 tiếng buổi sáng -> 2 điểm
+                in_time = f"{date_str} 08:25:10"
+                out_time = f"{date_str} 10:25:20"
             else:
                 # Ngày thường: Đủ ca chuẩn ~8.3 tiếng (trừ 1h trưa -> 8.0 Điểm chuyên cần)
                 in_m = random.randint(15, 25)

@@ -3,7 +3,7 @@
 <div align="center">
   <h2>PHÂN HỆ HỒ SƠ CÁ NHÂN & CHẤM CÔNG WIFI (MY PROFILE)</h2>
   <p><b>Trung tâm quản lý hiệu suất nhân sự, chấm công bảo mật WiFi và theo dõi điểm chuyên cần</b></p>
-  <p>BAKAERP v15 • Chấm công WiFi • Điểm chuyên cần theo năm (1đ/ngày đủ 8h) • Điểm đánh giá thi đua</p>
+  <p>BAKAERP v15 • Chấm công WiFi • Cứ tròn 1h = 1 điểm chuyên cần (Max 8đ/ngày) • Điểm đánh giá thi đua</p>
 </div>
 
 ---
@@ -31,9 +31,9 @@ Giao diện My Profile gồm 2 khu vực chính: **Thanh bên hồ sơ (Sidebar)
 │ • Chức vụ & Phòng ban           │     - Nút Chấm công Đan xen theo ca (VÀO / RA)         │
 │ • Bio (Mô tả trách nhiệm)       │                                                        │
 │                                 │ [2] Biểu Đồ Tổng Quan Chuyên Cần (Heatmap)             │
-│ • Chỉ số thành tích & Thi đua:  │     - Đủ 8h/ngày = 1 điểm chuyên cần (Tính theo năm)   │
-│   - Điểm đánh giá (X điểm)      │     - Ngày đạt đủ 8h hiển thị ô xanh chuyên cần        │
-│   - Điểm chuyên cần (Y điểm)    │     - Tự động reset về 0 điểm sau mỗi hết 1 năm        │
+│ • Chỉ số thành tích & Thi đua:  │     - Cứ tròn 1h = 1 điểm chuyên cần (Max: 8đ/ngày)    │
+│   - Điểm đánh giá (X điểm)      │     - Tổng quan chuyên cần các mốc 2, 4, 6, 8 điểm     │
+│   - Điểm chuyên cần (Y điểm)    │     - Không lấy thập phân, reset sau mỗi hết 1 năm     │
 │   - Hạng (Rank)                 │                                                        │
 │   - Hạng tháng (Monthly Rank)   │ [3] Biểu Đồ Điểm Đánh Giá (Line Chart)                 │
 │                                 │     - Xu hướng điểm thưởng hiệu suất theo thời gian    │
@@ -55,7 +55,7 @@ Nằm ở cột bên trái màn hình, cung cấp thông tin định danh và b�
 
 2. **Bảng thống kê thành tích & Xếp hạng (`User Stats`):**
    - **Điểm đánh giá:** Tổng số điểm đánh giá được ghi nhận từ cấp quản lý hoặc điểm thưởng hệ thống tự động khi tạo/chốt đơn hàng thành công (thay thế cho Điểm năng lượng cũ).
-   - **Điểm chuyên cần:** Tổng điểm tích lũy theo năm dương lịch (cứ làm đủ 8 tiếng 1 ngày thì tính là 1 điểm, số nguyên không có thập phân; hết 1 năm thì tự động reset về 0).
+   - **Điểm chuyên cần:** Tổng điểm tích lũy theo năm dương lịch (cứ tròn 1 tiếng làm việc thực tế = 1 điểm chuyên cần, không lấy số thập phân, tối đa 8 điểm/ngày; hết 1 năm thì tự động reset về 0).
    - **Hạng (Rank):** Xếp hạng tổng thể của nhân viên trong toàn doanh nghiệp.
    - **Hạng tháng (Monthly Rank):** Thứ hạng thi đua đạt được trong tháng hiện tại.
 
@@ -106,13 +106,18 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
 
 - **Tiêu đề khối:** `Tổng quan chuyên cần`.
 - **Cơ chế tính điểm & Đổ màu:**
+  - **Công thức tính điểm:** **Cứ tròn 1 tiếng làm việc thực tế = 1 điểm chuyên cần**, hoàn toàn **không lấy phần thập phân** (số nguyên: 1, 2, 3,..., tối đa **8 điểm/ngày**).
+    *(Ví dụ: Làm 3 giờ 25 phút $\rightarrow$ tính tròn 3 điểm; Làm 8 giờ 20 phút $\rightarrow$ đạt tối đa 8 điểm)*.
   - **Chu kỳ tính theo năm:** Điểm chuyên cần được tính lũy kế theo năm dương lịch (từ ngày 01/01 đến 31/12). Hết 1 năm hệ thống sẽ tự động reset về 0 để bắt đầu chu kỳ đánh giá năm mới.
-  - **Quy tắc tính điểm chuẩn:** Cứ làm **đủ 8 tiếng trong 1 ngày** thì được tính là **1 điểm**, dưới 8 tiếng là **0 điểm**. Điểm chuyên cần là **số nguyên duy nhất (1 hoặc 0)**, hoàn toàn không có phần thập phân.
   - Đối với ca làm việc $\ge 5$ giờ, hệ thống tự động khấu trừ 1 giờ nghỉ trưa chuẩn để tính thời gian làm việc thực tế.
-  - **Hiển thị trên biểu đồ Heatmap:** Ngày đạt đủ 8 tiếng sẽ nhận 1 điểm và hiển thị **ô xanh chuyên cần**. Ngày không đủ 8 tiếng (0 điểm) hoặc không đi làm sẽ có màu xám nhạt/trắng.
-  - **Tương tác di chuột (Tooltip):** Khi rê chuột vào từng ô ngày trên biểu đồ, hệ thống hiển thị chính xác:
+  - **Mức độ xanh (Color Intensity) theo các mốc 2, 4, 6, 8 điểm:**
+    - Mốc 2 điểm (1 - 2 giờ): Màu xanh nhạt (Level 1).
+    - Mốc 4 điểm (3 - 4 giờ, ví dụ ca thứ 7 nửa ngày): Màu xanh vừa (Level 2).
+    - Mốc 6 điểm (5 - 6 giờ): Màu xanh đậm hơn (Level 3).
+    - Mốc 8 điểm (7 - 8 giờ, ca chuẩn đủ 8 tiếng): Màu xanh đậm nhất (Level 4).
+  - **Tương tác di chuột (Tooltip):** Khi rê chuột vào từng ô ngày trên biểu đồ, hệ thống hiển thị chính xác số nguyên:
     $$\text{X Điểm chuyên cần (ngày dd-mm-yyyy)}$$
-    *(ví dụ: `1 Điểm chuyên cần (ngày 14-10-2026)` hoặc `0 Điểm chuyên cần`)*.
+    *(ví dụ: `8 Điểm chuyên cần (ngày 13-10-2026)`, `4 Điểm chuyên cần (ngày 10-10-2026)`, hoặc `2 Điểm chuyên cần`)*.
 - **Bộ lọc thời gian:** Cho phép xem biểu đồ nhiệt theo từng năm dương lịch.
 
 ---
@@ -148,8 +153,8 @@ Theo định hướng tinh gọn, tránh gây xao nhãng và tăng tốc độ x
 | :--- | :--- | :--- |
 | `get_attendance_status(user)` | `erpnext/setup/wifi_attendance.py` | Kiểm tra kết nối WiFi/IP, lấy trạng thái ca làm việc hôm nay và thống kê số ngày đi làm, đúng giờ trong tháng. |
 | `checkin(log_type)` | `erpnext/setup/wifi_attendance.py` | Thực hiện xác thực IP mạng WiFi và tạo bản ghi `Employee Checkin` (IN hoặc OUT). |
-| `get_chuyen_can_summary(user, year)` | `erpnext/setup/wifi_attendance.py` | Tính tổng điểm chuyên cần trong năm dương lịch (đủ 8h = 1đ, số nguyên, reset theo năm), điểm hôm nay và số ngày công. |
-| `get_chuyen_can_heatmap_data(user, date)` | `erpnext/setup/wifi_attendance.py` | Trích xuất toàn bộ dữ liệu điểm chuyên cần theo từng ngày (đủ 8h = 1đ, tính theo năm) nạp vào Heatmap chart. |
+| `get_chuyen_can_summary(user, year)` | `erpnext/setup/wifi_attendance.py` | Tính tổng điểm chuyên cần trong năm dương lịch (tròn 1h = 1đ, max 8đ/ngày, số nguyên, reset theo năm), điểm hôm nay và số ngày công. |
+| `get_chuyen_can_heatmap_data(user, date)` | `erpnext/setup/wifi_attendance.py` | Trích xuất toàn bộ dữ liệu điểm chuyên cần theo từng ngày (mốc 2, 4, 6, 8 điểm, max 8đ/ngày) nạp vào Heatmap chart. |
 | `get_user_energy_and_review_points(user)` | `frappe/social/.../energy_point_log.py` | Trả về tổng Điểm đánh giá (Energy Points) của nhân viên. |
 | `setup_profile_hook()` | `erpnext/public/js/wifi_attendance.js` | Tùy biến Frontend: Render thẻ chấm công WiFi, đổi tiêu đề biểu đồ, gán nhãn tooltip `Điểm chuyên cần`, loại bỏ Type Distribution & Recent Activity. |
 
@@ -165,7 +170,7 @@ Theo định hướng tinh gọn, tránh gây xao nhãng và tăng tốc độ x
    - Đảm bảo thiết bị (Laptop/Điện thoại) đã kết nối mạng WiFi văn phòng (`BAKA-OFFICE-5G`).
    - Bấm nút **Chấm công VÀO**. Hệ thống báo xanh thành công, chuyển sang trạng thái *Đang làm việc*.
 4. **Theo dõi điểm số trong ngày:**
-   - Điểm chuyên cần tính theo năm: Cứ làm đủ 8 tiếng 1 ngày sẽ đạt 1 điểm chuyên cần (số nguyên, không có số thập phân). Hết 1 năm hệ thống tự động reset chu kỳ mới.
+   - Điểm chuyên cần tính theo năm: Cứ tròn 1 tiếng làm việc thực tế tính 1 điểm (tối đa 8 điểm/ngày, số nguyên không lấy thập phân). Hết 1 năm hệ thống tự động reset chu kỳ mới.
 5. **Thực hiện Chấm công RA (Buổi chiều/tối khi tan sở):**
    - Trước khi rời văn phòng, bấm nút **Chấm công RA**. Hệ thống chốt tổng thời gian làm việc trong ngày và cập nhật ngay vào biểu đồ nhiệt *Tổng quan chuyên cần*.
 
