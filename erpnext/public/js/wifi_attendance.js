@@ -74,8 +74,8 @@ baka.attendance = {
 				frappe.ui.UserProfile.prototype.setup_user_activity_timeline = function () {};
 
 				// Hàm chuẩn hóa màu sắc ô heatmap theo mốc 2, 4, 6, 8 điểm
-				// - dataValue vẫn giữ nguyên điểm thật để tooltip hiển thị: 7 điểm, 3 điểm, ...
-				// - Màu sắc phân bổ theo mốc: 7đ -> màu mốc 6đ, 3đ -> màu mốc 2đ, ...
+				// - dataValue vẫn giữ nguyên điểm thật để tooltip hiển thị: 3 điểm, 5 điểm, 7 điểm,...
+				// - Màu sắc phân bổ theo mốc: 7đ -> màu mốc 6đ, 5đ -> màu mốc 4đ, 3đ -> màu mốc 2đ, ...
 				const hook_heatmap_colors = (heatmap) => {
 					if (!heatmap) return;
 					let proto = heatmap.constructor.prototype;
@@ -103,11 +103,11 @@ baka.attendance = {
 							if (val >= 8) {
 								color_idx = 4; // Mốc 8 điểm (từ 8đ trở lên)
 							} else if (val >= 6) {
-								color_idx = 3; // Mốc 6 điểm (6, 7 điểm)
+								color_idx = 3; // Mốc 6 điểm (6, 7 điểm -> màu mốc 6)
 							} else if (val >= 4) {
-								color_idx = 2; // Mốc 4 điểm (4, 5 điểm)
+								color_idx = 2; // Mốc 4 điểm (4, 5 điểm -> màu mốc 4)
 							} else if (val >= 2) {
-								color_idx = 1; // Mốc 2 điểm (2, 3 điểm)
+								color_idx = 1; // Mốc 2 điểm (2, 3 điểm -> màu mốc 2)
 							} else {
 								color_idx = 0; // Dưới 2 điểm (0, 1 điểm)
 							}
@@ -118,6 +118,38 @@ baka.attendance = {
 								dataValue: val,
 								fill: fill
 							};
+						};
+
+						// Hook bindTooltip để hiển thị chuẩn xác số điểm chuyên cần thực tế (3, 5, 7, ...)
+						proto.bindTooltip = function () {
+							let self = this;
+							this.container.addEventListener("mousemove", function (e) {
+								self.components.forEach(function (n) {
+									let store = n.store;
+									let target = e.target;
+									if (store && store.includes(target)) {
+										let val = target.getAttribute("data-value") || "0";
+										let date_str = target.getAttribute("data-date");
+										if (!date_str) return;
+										let parts = date_str.split("-");
+										let d_label = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : date_str;
+										let rect_cont = self.container.getBoundingClientRect();
+										let rect_target = target.getBoundingClientRect();
+										let width = parseInt(target.getAttribute("width") || "10");
+										let x = rect_target.left - rect_cont.left + width / 2;
+										let y = rect_target.top - rect_cont.top;
+										let value_text = `${val} ${self.countLabel || __("Điểm chuyên cần")}`;
+										let date_text = `(ngày ${d_label})`;
+
+										self.tip.setValues(x, y, {
+											name: date_text,
+											value: value_text,
+											valueFirst: 1
+										}, []);
+										self.tip.showTip();
+									}
+								});
+							});
 						};
 					}
 				};

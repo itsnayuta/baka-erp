@@ -573,20 +573,32 @@ def setup_attendance_october():
             if d_obj.weekday() == 6:
                 continue
 
-            # Thứ 7 (weekday = 5): Làm nửa ngày 4 tiếng (08:30 -> 12:30 -> 4 điểm)
+            # Thứ 7 (weekday = 5): Làm nửa ngày 4 tiếng (08:30 -> 12:30 -> 4 điểm, mốc 4)
             if d_obj.weekday() == 5:
                 in_time = f"{date_str} 08:30:15"
                 out_time = f"{date_str} 12:30:45"
+            elif day == 5:
+                # 5 điểm (làm 6 tiếng trừ 1h nghỉ trưa -> 5 điểm, màu mốc 4)
+                in_time = f"{date_str} 08:20:10"
+                out_time = f"{date_str} 14:20:30"
             elif day == 6:
-                # Mốc 6 điểm: Làm 7 tiếng trừ 1h nghỉ trưa -> 6 tiếng -> 6 điểm
+                # 6 điểm (làm 7 tiếng trừ 1h nghỉ trưa -> 6 điểm, màu mốc 6)
                 in_time = f"{date_str} 08:20:15"
                 out_time = f"{date_str} 15:20:30"
+            elif day == 7:
+                # 7 điểm (làm 8 tiếng trừ 1h nghỉ trưa -> 7 điểm, màu mốc 6)
+                in_time = f"{date_str} 08:20:10"
+                out_time = f"{date_str} 16:20:30"
             elif day == 8:
-                # Mốc 2 điểm: Làm 2 tiếng buổi sáng -> 2 điểm
-                in_time = f"{date_str} 08:25:10"
-                out_time = f"{date_str} 10:25:20"
+                # 3 điểm (làm 3 tiếng buổi sáng -> 3 điểm, màu mốc 2)
+                in_time = f"{date_str} 08:20:15"
+                out_time = f"{date_str} 11:20:45"
+            elif day == 9:
+                # 2 điểm (làm 2 tiếng buổi sáng -> 2 điểm, màu mốc 2)
+                in_time = f"{date_str} 08:20:15"
+                out_time = f"{date_str} 10:20:45"
             else:
-                # Ngày thường: Đủ ca chuẩn ~8.3 tiếng (trừ 1h trưa -> 8.0 Điểm chuyên cần)
+                # Ngày thường chuẩn: ~8.3 tiếng (trừ 1h trưa -> 8.0 Điểm chuyên cần, mốc 8)
                 in_m = random.randint(15, 25)
                 in_s = random.randint(10, 50)
                 in_time = f"{date_str} 08:{in_m:02d}:{in_s:02d}"
