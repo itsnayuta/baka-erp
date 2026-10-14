@@ -47,3 +47,20 @@ def verify():
         print(f"  App Name: {web.app_name}")
         print(f"  Copyright: {web.copyright}")
         print(f"  Footer Powered: {web.footer_powered}")
+
+    fys = frappe.get_all("Fiscal Year", fields=["name", "year_start_date", "year_end_date"])
+    print(f"\nFiscal Years: {fys}")
+    
+    from erpnext.accounts.utils import get_fiscal_years
+    now = frappe.utils.nowdate()
+    print(f"\nNow date: {now}")
+    print(f"Default fiscal year: {frappe.db.get_default('fiscal_year')}")
+    print(f"Fiscal year for {now} and BAKA: {get_fiscal_years(now, company='BAKA', boolean=True)}")
+    print(f"Fiscal Year Company records: {frappe.get_all('Fiscal Year Company', fields=['*'])}")
+
+    # Check Dashboard Charts with from_fiscal_year
+    charts = frappe.get_all("Dashboard Chart", fields=["name", "dynamic_filters_json", "filters_json"])
+    print(f"\nDashboard Charts with dynamic filters:")
+    for c in charts:
+        if c.dynamic_filters_json and "fiscal_year" in c.dynamic_filters_json:
+            print(f"  Chart: {c.name} -> {c.dynamic_filters_json}")

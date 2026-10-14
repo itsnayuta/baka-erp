@@ -4,6 +4,11 @@ frappe.provide("erpnext");
 frappe.provide("erpnext.utils");
 frappe.provide("erpnext.stock.utils");
 
+// Provide safe backwards compatibility for frappe.sys_defaults
+if (typeof frappe !== "undefined") {
+	frappe.sys_defaults = frappe.sys_defaults || (frappe.boot && frappe.boot.sysdefaults) || {};
+}
+
 $.extend(erpnext, {
 	get_currency: function (company) {
 		if (!company && cur_frm) company = cur_frm.doc.company;
@@ -466,6 +471,11 @@ $.extend(erpnext.utils, {
 					}
 				},
 			});
+		}
+
+		if (!fiscal_year) {
+			fiscal_year = (frappe.defaults && frappe.defaults.get_default("fiscal_year")) ||
+				(frappe.boot && frappe.boot.sysdefaults && frappe.boot.sysdefaults.fiscal_year) || "";
 		}
 		return fiscal_year;
 	},

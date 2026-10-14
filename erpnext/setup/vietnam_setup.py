@@ -169,5 +169,44 @@ Việt Nam"""
 
         print(f"✓ Configured standard Vietnamese defaults for {comp.name}")
 
+    # 5. Fix Dashboard Charts dynamic filters (Eliminate invalid frappe.sys_defaults expression)
+    frappe.db.sql("""
+        UPDATE `tabDashboard Chart` 
+        SET dynamic_filters_json = REPLACE(dynamic_filters_json, 'frappe.sys_defaults.fiscal_year', 'erpnext.utils.get_fiscal_year()')
+        WHERE dynamic_filters_json LIKE '%frappe.sys_defaults%'
+    """)
+    print("✓ Fixed all Dashboard Charts dynamic filters to use valid fiscal_year expression")
+
+    # 6. Setup Standard Vietnamese Fiscal Years (Calendar Year: 01/01 to 31/12)
+    for yr in [2025, 2026, 2027]:
+        year_name = str(yr)
+        start_date = f"{yr}-01-01"
+        end_date = f"{yr}-12-31"
+        if not frappe.db.exists("Fiscal Year", year_name):
+            fy_doc = frappe.get_doc({
+                "doctype": "Fiscal Year",
+                "year": year_name,
+                "year_start_date": start_date,
+                "year_end_date": end_date,
+                "companies": [{"company": "BAKA"}]
+            })
+            fy_doc.insert(ignore_permissions=True)
+            print(f"✓ Created standard Vietnamese Fiscal Year: {year_name} ({start_date} to {end_date})")
+        else:
+            if not frappe.db.exists("Fiscal Year Company", {"parent": year_name, "company": "BAKA"}):
+                frappe.get_doc({
+                    "doctype": "Fiscal Year Company",
+                    "parent": year_name,
+                    "parenttype": "Fiscal Year",
+                    "parentfield": "companies",
+                    "company": "BAKA"
+                }).insert(ignore_permissions=True)
+
+    # Set 2026 as the active default fiscal year
+    frappe.db.set_default("fiscal_year", "2026")
+    if frappe.db.exists("DocType", "Global Defaults"):
+        frappe.db.set_single_value("Global Defaults", "current_fiscal_year", "2026")
+    print("✓ Set default active Fiscal Year to 2026")
+
     frappe.db.commit()
     print("=== BAKAERP Vietnam Configuration Complete ===")
