@@ -14,8 +14,7 @@ from erpnext.setup.utils import identity as _
 
 from .default_success_action import get_default_success_action
 
-default_mail_footer = """<div style="padding: 7px; text-align: right; color: #888"><small>Sent via
-	<a style="color: #888" href="http://frappe.io/erpnext">ERPNext</a></div>"""
+default_mail_footer = """<div style="padding: 7px; text-align: right; color: #888"><small>Được gửi từ BAKAERP</small></div>"""
 
 
 def after_install():
@@ -235,60 +234,15 @@ def add_company_to_session_defaults():
 
 
 def add_standard_navbar_items():
+	# In BAKAERP (private domestic enterprise system): hide foreign/external links
 	navbar_settings = frappe.get_single("Navbar Settings")
-	erpnext_navbar_items = [
-		{
-			"item_label": _("Documentation"),
-			"item_type": "Route",
-			"route": "https://docs.erpnext.com/",
-			"is_standard": 1,
-		},
-		{
-			"item_label": _("User Forum"),
-			"item_type": "Route",
-			"route": "https://discuss.frappe.io",
-			"is_standard": 1,
-		},
-		{
-			"item_label": _("Frappe School"),
-			"item_type": "Route",
-			"route": "https://frappe.io/school?utm_source=in_app",
-			"is_standard": 1,
-		},
-		{
-			"item_label": _("Report an Issue"),
-			"item_type": "Route",
-			"route": "https://github.com/frappe/erpnext/issues",
-			"is_standard": 1,
-		},
-	]
-
-	current_navbar_items = navbar_settings.help_dropdown
-	navbar_settings.set("help_dropdown", [])
-
-	for item in erpnext_navbar_items:
-		current_labels = [item.get("item_label") for item in current_navbar_items]
-		if item.get("item_label") not in current_labels:
-			navbar_settings.append("help_dropdown", item)
-
-	for item in current_navbar_items:
-		navbar_settings.append(
-			"help_dropdown",
-			{
-				"item_label": item.item_label,
-				"item_type": item.item_type,
-				"route": item.route,
-				"action": item.action,
-				"is_standard": item.is_standard,
-				"hidden": item.hidden,
-			},
-		)
-
-	navbar_settings.save()
+	for item in navbar_settings.help_dropdown:
+		item.hidden = 1
+	navbar_settings.save(ignore_permissions=True)
 
 
 def add_app_name():
-	frappe.db.set_single_value("System Settings", "app_name", "ERPNext")
+	frappe.db.set_single_value("System Settings", "app_name", "BAKAERP")
 
 
 def hide_workspaces():

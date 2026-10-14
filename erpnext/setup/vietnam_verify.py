@@ -29,8 +29,21 @@ def verify():
 
     sys = frappe.get_doc("System Settings")
     print(f"\nSystem Settings:")
+    print(f"  App Name: {sys.app_name}")
     print(f"  Country: {sys.country}")
     print(f"  Language: {sys.language}")
     print(f"  Timezone: {sys.time_zone}")
     print(f"  Date Format: {sys.date_format}")
     print(f"  Number Format: {sys.number_format}")
+
+    nav = frappe.get_doc("Navbar Settings")
+    visible_help = [i.item_label for i in nav.help_dropdown if not i.hidden]
+    print(f"\nNavbar Settings:")
+    print(f"  Visible Help Items: {visible_help}")
+
+    if frappe.db.exists("DocType", "Website Settings"):
+        web = frappe.get_doc("Website Settings")
+        print(f"\nWebsite Settings:")
+        print(f"  App Name: {web.app_name}")
+        print(f"  Copyright: {web.copyright}")
+        print(f"  Footer Powered: {web.footer_powered}")

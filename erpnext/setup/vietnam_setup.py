@@ -2,31 +2,61 @@ import frappe
 from frappe import _
 
 def run():
-    print("=== Configuring ERP for Vietnam ===")
+    print("=== Configuring ERP for Vietnam (BAKAERP) ===")
     
     # 0. Check Country doctype
     viet_countries = frappe.db.sql("SELECT name, code FROM `tabCountry` WHERE name LIKE '%Viet%'", as_dict=True)
     country_name = viet_countries[0].name if viet_countries else "Vietnam"
     print(f"Using country name: {country_name}")
 
-    # 1. System Settings
+    # 1. System Settings & BAKAERP Branding
     sys_doc = frappe.get_doc("System Settings")
+    sys_doc.app_name = "BAKAERP"
     sys_doc.country = country_name
     sys_doc.currency = "VND"
     sys_doc.time_zone = "Asia/Ho_Chi_Minh"
     sys_doc.date_format = "dd-mm-yyyy"
     sys_doc.number_format = "#.###,##"
     sys_doc.language = "vi"
+    sys_doc.enable_onboarding = 0
     sys_doc.flags.ignore_mandatory = True
     sys_doc.save(ignore_permissions=True)
-    print(f"✓ Configured System Settings (Country: {country_name}, Currency: VND, Timezone: Asia/Ho_Chi_Minh, Language: vi)")
+    frappe.db.set_single_value("System Settings", "app_name", "BAKAERP")
+    print(f"✓ Configured System Settings (App Name: BAKAERP, Country: {country_name}, Currency: VND, Timezone: Asia/Ho_Chi_Minh, Language: vi)")
 
+    frappe.db.set_default("app_name", "BAKAERP")
     frappe.db.set_default("country", country_name)
     frappe.db.set_default("currency", "VND")
     frappe.db.set_default("time_zone", "Asia/Ho_Chi_Minh")
     frappe.db.set_default("date_format", "dd-mm-yyyy")
     frappe.db.set_default("number_format", "#.###,##")
     frappe.db.set_default("language", "vi")
+
+    # 1.1 Navbar Settings (Hide foreign/external Frappe/ERPNext help links)
+    try:
+        navbar_settings = frappe.get_single("Navbar Settings")
+        for item in navbar_settings.help_dropdown:
+            item.hidden = 1
+        for item in navbar_settings.settings_dropdown:
+            if any(term in (item.route or "").lower() for term in ["docs", "frappe", "erpnext", "discuss", "school", "issue"]):
+                item.hidden = 1
+        navbar_settings.save(ignore_permissions=True)
+        print("✓ Configured Navbar Settings (App Name: BAKAERP, hid all external foreign links)")
+    except Exception as e:
+        print(f"! Navbar Settings notice: {e}")
+
+    # 1.2 Website Settings (Clear old app footers and powered by)
+    try:
+        if frappe.db.exists("DocType", "Website Settings"):
+            web_settings = frappe.get_single("Website Settings")
+            web_settings.app_name = "BAKAERP"
+            web_settings.copyright = "BAKAERP"
+            web_settings.footer_powered = ""
+            web_settings.hide_footer_signup = 1
+            web_settings.save(ignore_permissions=True)
+            print("✓ Configured Website Settings (BAKAERP branding, removed external footers)")
+    except Exception as e:
+        print(f"! Website Settings notice: {e}")
 
     # 2. Setup Vietnam Address Template
     from erpnext.regional.address_template.setup import update_address_template
@@ -140,4 +170,4 @@ Việt Nam"""
         print(f"✓ Configured standard Vietnamese defaults for {comp.name}")
 
     frappe.db.commit()
-    print("=== Vietnam ERP Optimization Complete ===")
+    print("=== BAKAERP Vietnam Configuration Complete ===")
