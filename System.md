@@ -111,14 +111,17 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
   - **Tổng điểm chuyên cần:** Tổng số điểm tích lũy luôn là **một số nguyên hoàn chỉnh**, tuyệt đối không có số lẻ thập phân.
   - **Chu kỳ tính theo năm:** Điểm chuyên cần được tính lũy kế theo năm dương lịch (từ ngày 01/01 đến 31/12). Hết 1 năm hệ thống sẽ tự động reset về 0 để bắt đầu chu kỳ đánh giá năm mới.
   - Đối với ca làm việc $\ge 5$ giờ, hệ thống tự động khấu trừ 1 giờ nghỉ trưa chuẩn để tính thời gian làm việc thực tế.
-  - **Mức độ xanh (Color Intensity) theo các mốc 2, 4, 6, 8 điểm:**
-    - Mốc 2 điểm (1 - 2 giờ): Màu xanh nhạt (Level 1).
-    - Mốc 4 điểm (3 - 4 giờ, ví dụ ca thứ 7 nửa ngày): Màu xanh vừa (Level 2).
-    - Mốc 6 điểm (5 - 6 giờ): Màu xanh đậm hơn (Level 3).
-    - Mốc 8 điểm (7 - 8 giờ, ca chuẩn đủ 8 tiếng): Màu xanh đậm nhất (Level 4).
-  - **Tương tác di chuột (Tooltip):** Khi rê chuột vào từng ô ngày trên biểu đồ, hệ thống hiển thị chính xác số nguyên:
+  - **Mức độ xanh (Color Intensity) theo các mốc chuẩn 2, 4, 6, 8 điểm:**
+    - Điểm số hiển thị đúng và đầy đủ theo từng ngày: Ví dụ làm 7 tiếng tính đúng 7 điểm, làm 3 tiếng tính đúng 3 điểm.
+    - Sắc độ màu sắc của ô ngày được ánh xạ chuẩn theo các mốc:
+      - **Mốc 8 điểm** (từ 8 điểm trở lên): Màu xanh đậm nhất (Level 4).
+      - **Mốc 6 điểm** (từ 6 đến 7 điểm): Màu xanh đậm (Level 3, ví dụ 7 điểm thì mang màu của mốc 6 điểm).
+      - **Mốc 4 điểm** (từ 4 đến 5 điểm): Màu xanh vừa (Level 2, ví dụ 5 điểm mang màu của mốc 4 điểm).
+      - **Mốc 2 điểm** (từ 2 đến 3 điểm): Màu xanh nhạt (Level 1, ví dụ 3 điểm mang màu của mốc 2 điểm).
+      - **Dưới 2 điểm** (0 đến 1 điểm): Màu xám nhạt không tô màu (Level 0).
+  - **Tương tác di chuột (Tooltip):** Khi rê chuột vào từng ô ngày trên biểu đồ, hệ thống luôn hiển thị chính xác số điểm chuyên cần thật:
     $$\text{X Điểm chuyên cần (ngày dd-mm-yyyy)}$$
-    *(ví dụ: `8 Điểm chuyên cần (ngày 13-10-2026)`, `4 Điểm chuyên cần (ngày 10-10-2026)`, hoặc `2 Điểm chuyên cần`)*.
+    *(ví dụ: `7 Điểm chuyên cần (ngày 14-10-2026)`, `3 Điểm chuyên cần (ngày 11-10-2026)`, `8 Điểm chuyên cần`, v.v.)*.
 - **Bộ lọc thời gian:** Cho phép xem biểu đồ nhiệt theo từng năm dương lịch.
 
 ---

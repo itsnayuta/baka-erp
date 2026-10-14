@@ -64,6 +64,7 @@ baka.attendance = {
 					this.main_section.find(".heatmap-container .card-title").text(__("Tổng quan chuyên cần"));
 					if (this.heatmap) {
 						this.heatmap.countLabel = __("Điểm chuyên cần");
+						hook_heatmap_colors(this.heatmap);
 					}
 				};
 
@@ -71,6 +72,55 @@ baka.attendance = {
 				frappe.ui.UserProfile.prototype.render_percentage_chart = function () {};
 				frappe.ui.UserProfile.prototype.create_percentage_chart_filters = function () {};
 				frappe.ui.UserProfile.prototype.setup_user_activity_timeline = function () {};
+
+				// Hàm chuẩn hóa màu sắc ô heatmap theo mốc 2, 4, 6, 8 điểm
+				// - dataValue vẫn giữ nguyên điểm thật để tooltip hiển thị: 7 điểm, 3 điểm, ...
+				// - Màu sắc phân bổ theo mốc: 7đ -> màu mốc 6đ, 3đ -> màu mốc 2đ, ...
+				const hook_heatmap_colors = (heatmap) => {
+					if (!heatmap) return;
+					let proto = heatmap.constructor.prototype;
+					if (proto && !proto._custom_color_hooked) {
+						proto._custom_color_hooked = true;
+						proto.getSubDomainConfig = function (t) {
+							let year = t.getFullYear();
+							let month = String(t.getMonth() + 1).padStart(2, "0");
+							let day = String(t.getDate()).padStart(2, "0");
+							let yyyyMmDd = `${year}-${month}-${day}`;
+							let ts = Math.floor(t.getTime() / 1000);
+
+							let val = 0;
+							if (this.data && this.data.dataPoints) {
+								if (this.data.dataPoints[yyyyMmDd] != null) {
+									val = this.data.dataPoints[yyyyMmDd];
+								} else if (this.data.dataPoints[ts] != null) {
+									val = this.data.dataPoints[ts];
+								} else if (this.data.dataPoints[String(ts)] != null) {
+									val = this.data.dataPoints[String(ts)];
+								}
+							}
+
+							let color_idx = 0;
+							if (val >= 8) {
+								color_idx = 4; // Mốc 8 điểm (từ 8đ trở lên)
+							} else if (val >= 6) {
+								color_idx = 3; // Mốc 6 điểm (6, 7 điểm)
+							} else if (val >= 4) {
+								color_idx = 2; // Mốc 4 điểm (4, 5 điểm)
+							} else if (val >= 2) {
+								color_idx = 1; // Mốc 2 điểm (2, 3 điểm)
+							} else {
+								color_idx = 0; // Dưới 2 điểm (0, 1 điểm)
+							}
+
+							let fill = (this.colors && this.colors[color_idx]) ? this.colors[color_idx] : "#ebedf0";
+							return {
+								yyyyMmDd: yyyyMmDd,
+								dataValue: val,
+								fill: fill
+							};
+						};
+					}
+				};
 
 				// 2. Hook render_heatmap: đảm bảo countLabel lúc khởi tạo chart luôn là "Điểm chuyên cần"
 				frappe.ui.UserProfile.prototype.render_heatmap = function () {
@@ -83,6 +133,7 @@ baka.attendance = {
 						radius: 3,
 						height: 140,
 					});
+					hook_heatmap_colors(this.heatmap);
 					this.update_heatmap_data();
 					this.create_heatmap_chart_filters();
 				};
@@ -146,6 +197,7 @@ baka.attendance = {
 					}).then((r) => {
 						if (this.heatmap) {
 							this.heatmap.countLabel = __("Điểm chuyên cần");
+							hook_heatmap_colors(this.heatmap);
 							this.heatmap.update({
 								dataPoints: r || {}
 							});
