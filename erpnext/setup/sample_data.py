@@ -9,11 +9,8 @@ def run():
 
     # 1. Tạo các tài khoản người dùng chuẩn theo cơ cấu doanh nghiệp
     full_executive_roles = [
-        "System Manager", "Sales Manager", "Sales User", "Sales Master Manager",
-        "Accounts Manager", "Accounts User", "Stock Manager", "Stock User",
-        "Purchase Manager", "Purchase User", "HR Manager", "HR User",
-        "Support Team", "Item Manager", "Report Manager", "Dashboard Manager",
-        "Workspace Manager", "Desk User", "Auditor", "Analytics"
+        r for r in frappe.get_all("Role", filters={"disabled": 0}, pluck="name")
+        if r not in ["Customer", "Supplier", "Guest", "Administrator"]
     ]
 
     users = [
