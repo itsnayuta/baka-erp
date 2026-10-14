@@ -304,42 +304,62 @@ baka.attendance = {
 
 			let action_section_html = "";
 			if (is_own_profile) {
-				let checkin_buttons = "";
-				if (s.shift_status === "NOT_CHECKED_IN") {
-					checkin_buttons = `
-						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
-							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Check In)
-						</button>
-					`;
-				} else if (s.shift_status === "IN_SHIFT") {
-					checkin_buttons = `
-						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
-							<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
-							${s.status_label} (Vào lúc: <b>${s.last_log ? s.last_log.time : s.today_in}</b> • Hôm nay: <b>${s.work_hours_str || ''}</b>)
+				if (s.is_limit_reached || s.today_logs_count >= 5) {
+					action_section_html = `
+						<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; width: 100%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+							<div style="color: #b91c1c; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+								<i class="fa fa-exclamation-triangle" style="font-size: 18px; color: #dc2626;"></i>
+								<span>Bạn đã đạt tối đa 5 lần chấm công trong ngày hôm nay (${s.today_logs_count}/5 lần). <b>Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!</b></span>
+							</div>
+							<button class="btn btn-default" disabled style="opacity: 0.65; cursor: not-allowed; font-weight: 600; font-size: 13px; color: #dc2626; border-color: #fca5a5; background: #fff;">
+								<i class="fa fa-lock" style="margin-right: 4px;"></i> Đã khóa nút chấm công
+							</button>
 						</div>
-						<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
-							<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
-						</button>
 					`;
 				} else {
-					checkin_buttons = `
-						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
-							<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
-							${s.status_label} (Hôm nay đã làm: <b>${s.work_hours_str}</b>)
+					let checkin_buttons = "";
+					let remaining = s.remaining_logs != null ? s.remaining_logs : Math.max(0, 5 - (s.today_logs_count || 0));
+					let remaining_badge = `<span style="font-size: 11px; background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 12px; font-weight: 600; margin-left: 4px;" title="Mỗi ngày tối đa 5 lượt chấm công">Còn ${remaining}/5 lần</span>`;
+
+					if (s.shift_status === "NOT_CHECKED_IN") {
+						checkin_buttons = `
+							<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+								<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Check In)
+							</button>
+							${remaining_badge}
+						`;
+					} else if (s.shift_status === "IN_SHIFT") {
+						checkin_buttons = `
+							<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
+								<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
+								${s.status_label} (Vào lúc: <b>${s.last_log ? s.last_log.time : s.today_in}</b> • Hôm nay: <b>${s.work_hours_str || ''}</b>)
+							</div>
+							<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
+								<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
+							</button>
+							${remaining_badge}
+						`;
+					} else {
+						checkin_buttons = `
+							<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
+								<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
+								${s.status_label} (Hôm nay đã làm: <b>${s.work_hours_str}</b>)
+							</div>
+							<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+								<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Ca tiếp theo)
+							</button>
+							${remaining_badge}
+						`;
+					}
+
+					action_section_html = `
+						<div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; background: var(--fg-color, #f8fafc); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
+							<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
+								${checkin_buttons}
+							</div>
 						</div>
-						<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
-							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Ca tiếp theo)
-						</button>
 					`;
 				}
-
-				action_section_html = `
-					<div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; background: var(--fg-color, #f8fafc); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
-						<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
-							${checkin_buttons}
-						</div>
-					</div>
-				`;
 			} else {
 				action_section_html = `
 					<div style="display: flex; justify-content: space-between; align-items: center; background: var(--fg-color, #f8fafc); border: 1px dashed var(--border-color, #cbd5e1); border-radius: 8px; padding: 12px 18px; flex-wrap: wrap; gap: 10px;">

@@ -156,8 +156,13 @@ def get_attendance_status(user=None):
     t_m = int((today_seconds % 3600) // 60)
     work_hours_str = f"{t_h} giờ {t_m} phút"
 
-    # 3. Trạng thái ca làm việc hiện tại (Hỗ trợ 2 ca / nhiều ca đan xen)
-    if not last_log:
+    # 3. Trạng thái ca làm việc hiện tại (Hỗ trợ 2 ca / nhiều ca đan xen & giới hạn 5 lần/ngày)
+    is_limit_reached = len(today_checkins) >= 5
+    if is_limit_reached:
+        shift_status = "LIMIT_REACHED"
+        status_label = "Đã đạt giới hạn 5 lần/ngày"
+        status_color = "#dc2626"
+    elif not last_log:
         shift_status = "NOT_CHECKED_IN"
         status_label = "Chưa vào ca"
         status_color = "#eab308"
@@ -198,6 +203,9 @@ def get_attendance_status(user=None):
         "month_hours_total": round(month_hours_total, 1),
         "month_hours_str": month_hours_str,
         "cur_month": cur_month,
+        "is_limit_reached": is_limit_reached,
+        "max_daily_logs": 5,
+        "remaining_logs": max(0, 5 - len(today_checkins)),
         "last_log": last_log_dict,
         "today_logs_count": len(today_checkins),
         "today_logs": [
@@ -242,7 +250,7 @@ def checkin(log_type="IN"):
     now = now_datetime()
     today = nowdate()
 
-    # 1. Kiểm tra các bản ghi hôm nay để chống spam & quản lý trạng thái ca
+    # 1. Kiểm tra giới hạn tối đa 5 lần chấm công trong ngày
     today_checkins = frappe.get_all(
         "Employee Checkin",
         filters={"employee": emp.name, "date": today},
@@ -250,18 +258,12 @@ def checkin(log_type="IN"):
         order_by="time asc"
     )
 
+    if len(today_checkins) >= 5:
+        frappe.throw(_("Bạn đã đạt giới hạn tối đa 5 lần chấm công trong ngày hôm nay. Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"))
+
     last_log = today_checkins[-1] if today_checkins else None
 
-    # 2. Khóa Cooldown 5 phút (300 giây) chống spam bấm liên tục
-    if last_log:
-        last_time = last_log.time
-        diff_sec = (now - last_time).total_seconds()
-        if diff_sec < 300:
-            remaining = int(300 - diff_sec)
-            last_time_str = last_time.strftime("%H:%M:%S") if hasattr(last_time, "strftime") else str(last_time)[11:19]
-            frappe.throw(_(f"Bạn vừa mới chấm công lúc {last_time_str}. Vui lòng đợi thêm {remaining} giây (ít nhất 5 phút giữa 2 lần bấm) để tránh trùng lặp dữ liệu!"))
-
-    # 3. Quản lý logic ca làm việc chuẩn (Đan xen IN -> OUT -> IN -> OUT hỗ trợ 2 ca / nhiều ca)
+    # 2. Quản lý logic ca làm việc chuẩn (Đan xen IN -> OUT -> IN -> OUT hỗ trợ 2 ca / nhiều ca)
     if log_type == "IN":
         if last_log and last_log.log_type == "IN":
             in_time_str = last_log.time.strftime("%H:%M:%S") if hasattr(last_log.time, "strftime") else str(last_log.time)[11:19]

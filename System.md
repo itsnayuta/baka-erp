@@ -81,13 +81,21 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
 3. **Cơ chế Máy trạng thái Đan xen (State-Machine) & Hỗ trợ 2 Ca/Nhiều Ca:**
    - Hỗ trợ linh hoạt cho cả nhân viên làm 1 ca thông thường hoặc làm **2 ca / ca gãy / ca tăng ca** (Ca sáng $\rightarrow$ Ca chiều $\rightarrow$ Tăng ca tối).
    - **Quy trình đan xen tự nhiên:** $\text{VÀO} \rightarrow \text{RA} \rightarrow \text{VÀO} \rightarrow \text{RA}$.
+   - **Không cần thời gian chờ (Không cooldown):** Nhân viên có thể chấm công ngay lập tức khi chuyển ca hoặc ra vào văn phòng mà không bị khóa chờ 5 phút như trước.
    - **Chống spam & chống bấm nhầm:**
      - Đang ngoài ca (hoặc đầu ngày): Giao diện chỉ hiển thị duy nhất nút **`Chấm công VÀO`** (hoặc `Chấm công VÀO (Ca tiếp theo)`). Chặn không cho phép bấm RA.
      - Đang trong ca: Giao diện tự động chuyển sang duy nhất nút **`Chấm công RA`**, hiển thị rõ ca đang làm và thời gian làm việc. Chặn không cho phép bấm VÀO tiếp.
-     - **Khóa Cooldown 5 phút:** Khoảng cách tối thiểu giữa 2 lần bấm là 300 giây (5 phút), chặn hoàn toàn việc bấm liên tục gây trùng dữ liệu.
-     - **Khóa nút bấm tức thì (Click Lock):** Nút bấm lập tức vô hiệu hóa khi chạm chuột/màn hình cảm ứng để triệt tiêu lỗi double-click.
+     - **Khóa nút bấm tức thì (Click Lock):** Nút bấm lập tức vô hiệu hóa khi chạm chuột/màn hình cảm ứng trong lúc gửi dữ liệu để triệt tiêu lỗi double-click.
 
-4. **Tính giờ làm việc & Điểm chuyên cần chuẩn xác:**
+4. **Giới hạn 5 lần chấm công/ngày & Khóa nút an toàn:**
+   - Mỗi nhân viên chỉ được phép thực hiện tối đa **5 lần chấm công (check-in / check-out)** trong một ngày.
+   - Hiển thị huy hiệu số lượt còn lại trực quan (ví dụ: `Còn 4/5 lần`).
+   - **Khi đạt mốc 5 lần:**
+     - Hệ thống lập tức **khóa hoàn toàn nút chấm công** cho ngày hôm đó.
+     - Hiển thị banner cảnh báo màu đỏ: *"Bạn đã đạt tối đa 5 lần chấm công trong ngày hôm nay (5/5 lần). Vui lòng liên hệ với Ban lãnh đạo để được hỗ trợ xử lý!"*
+     - Mọi yêu cầu chấm công vượt quá 5 lần từ API/Backend đều bị từ chối và yêu cầu liên hệ Ban lãnh đạo.
+
+5. **Tính giờ làm việc & Điểm chuyên cần chuẩn xác:**
    - Tổng thời gian làm việc được tính theo tổng độ dài của từng cặp ca thực tế: $\sum (\text{RA}_i - \text{VÀO}_i)$.
    - Tự động loại trừ thời gian nghỉ giữa các ca, bảo đảm dữ liệu minh bạch, chuẩn xác cho cả doanh nghiệp và người lao động.
    - Đã loại bỏ hoàn toàn nút *"Xem lịch sử chi tiết"* rườm rà, tập trung tối đa vào trải nghiệm nhanh gọn của người dùng.
