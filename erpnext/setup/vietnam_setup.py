@@ -16,16 +16,18 @@ def test_profile_logic():
         status = get_attendance_status(u)
         print(f"  Attendance: Employee={status.get('employee_id')} ({status.get('employee_name')}), In={status.get('today_in')}, Out={status.get('today_out')}, Total Days Worked={status.get('stats', {}).get('total_days')}, On-time={status.get('stats', {}).get('on_time_count')}")
         
-        # 2. Điểm chuyên cần (1h làm việc = 1 điểm, max 8đ/ngày)
+        # 2. Điểm chuyên cần theo năm (Đủ 8 tiếng = 1 điểm, số nguyên, reset mỗi năm)
         cc = get_chuyen_can_summary(u)
-        print(f"  Chuyên cần: Total Points={cc.get('total_points')}, Today Points={cc.get('today_points')}, Days Worked={cc.get('days_worked')}")
-        
-        # 3. Heatmap Data
+        print(f"  Chuyên cần (Năm {cc.get('year')}): Total Points={cc.get('total_points')}, Today Points={cc.get('today_points')}, Days Worked={cc.get('days_worked')}")
+        assert isinstance(cc.get("total_points"), int), "Error: Chuyên cần points must be an integer"
+        assert isinstance(cc.get("today_points"), int), "Error: Today points must be an integer"
+
+        # 3. Heatmap Data (1 point per day with >= 8h work)
         hm = get_chuyen_can_heatmap_data(u)
         max_pt = max(hm.values()) if hm else 0
         min_pt = min(hm.values()) if hm else 0
-        print(f"  Heatmap: {len(hm)} data points, Min Daily Point={min_pt}, Max Daily Point={max_pt} (Expected <= 8.0)")
-        assert max_pt <= 8.0, f"Error: Daily point exceeds 8.0: {max_pt}"
+        print(f"  Heatmap: {len(hm)} data points, Min Daily Point={min_pt}, Max Daily Point={max_pt} (Expected <= 1)")
+        assert max_pt <= 1, f"Error: Daily point exceeds 1: {max_pt}"
         
         # 4. Điểm đánh giá (Energy Points)
         ep = get_user_energy_and_review_points(u)

@@ -535,4 +535,4 @@ Setup`,fieldname:"workstation_status",label:__("Status"),onchange:()=>{this.rend
 					</div>
 				</div>
 			`;a.html(c),a.find(".baka-checkin-btn").on("click",()=>{this.do_checkin("IN",()=>{this.render_profile_widget(r)})}),a.find(".baka-checkout-btn").on("click",()=>{this.do_checkin("OUT",()=>{this.render_profile_widget(r)})})})}};$(document).on("app_ready",function(){baka.attendance.init()});window.frappe&&frappe.boot&&setTimeout(()=>{baka.attendance.init()},300);})();
-//# sourceMappingURL=erpnext.bundle.O363JI6M.js.map
+//# sourceMappingURL=erpnext.bundle.HFADNVF2.js.map

@@ -134,7 +134,7 @@ baka.attendance = {
 					});
 				};
 
-				// 5. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (1h = 1 điểm, tối đa 8 điểm/ngày)
+				// 5. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (đủ 8h = 1 điểm, tính theo năm)
 				frappe.ui.UserProfile.prototype.update_heatmap_data = function (date) {
 					frappe.xcall("erpnext.setup.wifi_attendance.get_chuyen_can_heatmap_data", {
 						user: this.user_id,

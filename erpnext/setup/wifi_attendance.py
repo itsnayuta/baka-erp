@@ -330,16 +330,21 @@ def checkin(log_type="IN"):
         "message": f"✓ Đã chấm công {msg_action} {shift_label} lúc {time_str} thành công! (Trạng thái: {status})"
     }
 
-def get_daily_work_hours_and_points(employee_id):
+def get_daily_work_hours_and_points(employee_id, year=None):
     """
     Tính số giờ làm việc thực tế và điểm chuyên cần theo từng ngày:
-    - Cứ tích lũy 1 tiếng làm trong ngày là 1 điểm.
-    - Càng nhiều điểm ô trên Heatmap sẽ càng xanh.
-    - Tối đa 8 điểm 1 ngày.
+    - Tính theo năm (mỗi năm reset 1 lần).
+    - Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân).
+    - Dưới 8 tiếng = 0 điểm.
     """
+    filters = {"employee": employee_id}
+    if year:
+        y_str = str(year)
+        filters["date"] = ["between", [f"{y_str}-01-01", f"{y_str}-12-31"]]
+
     checkins = frappe.get_all(
         "Employee Checkin",
-        filters={"employee": employee_id},
+        filters=filters,
         fields=["name", "date", "time", "log_type"],
         order_by="time asc"
     )
@@ -380,8 +385,8 @@ def get_daily_work_hours_and_points(employee_id):
             day_seconds -= 3600
 
         raw_hours = max(0.0, day_seconds / 3600.0)
-        # 1 tiếng = 1 điểm, tối đa 8 điểm/ngày
-        points = round(min(8.0, max(0.0, raw_hours)), 1)
+        # Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân)
+        points = 1 if raw_hours >= 8.0 else 0
 
         result[d_str] = {
             "hours": round(raw_hours, 1),
@@ -391,36 +396,48 @@ def get_daily_work_hours_and_points(employee_id):
     return result
 
 @frappe.whitelist()
-def get_chuyen_can_summary(user=None):
-    """Lấy tổng điểm chuyên cần tích lũy của nhân viên"""
+def get_chuyen_can_summary(user=None, year=None):
+    """
+    Lấy tổng điểm chuyên cần tích lũy trong năm của nhân viên:
+    - Tính theo năm (hết 1 năm thì reset 1 lần).
+    - Cứ làm đủ 8 tiếng 1 ngày = 1 điểm (số nguyên, không có phần thập phân).
+    """
     if not user:
         user = frappe.session.user
     if user == "Guest":
         return {"total_points": 0, "today_points": 0}
 
+    cur_year = str(year) if year else nowdate()[:4]
     emp = get_employee_for_user(user)
-    daily_data = get_daily_work_hours_and_points(emp.name)
+    daily_data = get_daily_work_hours_and_points(emp.name, year=cur_year)
     total_points = sum(d["points"] for d in daily_data.values())
     today_str = nowdate()
-    today_points = daily_data.get(today_str, {}).get("points", 0.0)
+    today_points = daily_data.get(today_str, {}).get("points", 0)
 
     return {
-        "total_points": round(total_points, 1),
-        "total_points_int": int(round(total_points)),
-        "today_points": round(today_points, 1),
-        "days_worked": len(daily_data)
+        "year": cur_year,
+        "total_points": int(total_points),
+        "total_points_int": int(total_points),
+        "today_points": int(today_points),
+        "days_worked": len(daily_data),
+        "qualified_days": int(total_points)
     }
 
 @frappe.whitelist()
 def get_chuyen_can_heatmap_data(user=None, date=None):
-    """Trả về dữ liệu heatmap điểm chuyên cần (1 tiếng làm = 1 điểm, tối đa 8 điểm/ngày)"""
+    """
+    Trả về dữ liệu heatmap điểm chuyên cần theo năm:
+    - Cứ đủ 8 tiếng = 1 điểm, dưới 8 tiếng = 0 điểm.
+    - Reset theo từng năm.
+    """
     if not user:
         user = frappe.session.user
     if user == "Guest":
         return {}
 
+    target_year = str(date)[:4] if date else nowdate()[:4]
     emp = get_employee_for_user(user)
-    daily_data = get_daily_work_hours_and_points(emp.name)
+    daily_data = get_daily_work_hours_and_points(emp.name, year=target_year)
 
     import time
     heatmap_dict = {}
@@ -428,7 +445,9 @@ def get_chuyen_can_heatmap_data(user=None, date=None):
         try:
             d_obj = getdate(d_str)
             ts = int(time.mktime(d_obj.timetuple()))
-            heatmap_dict[str(ts)] = info["points"]
+            # Chỉ ghi nhận điểm khi >= 1 (đủ 8 tiếng) để hiển thị ô xanh trên Heatmap
+            if info["points"] >= 1:
+                heatmap_dict[str(ts)] = int(info["points"])
         except Exception:
             pass
 
