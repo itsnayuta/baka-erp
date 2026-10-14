@@ -148,3 +148,4 @@ Theo định hướng tinh gọn, tránh gây xao nhãng và tăng tốc độ x
    - Hệ thống tự động tích lũy 1 điểm chuyên cần cho mỗi 1 giờ làm việc thực tế.
 5. **Thực hiện Chấm công RA (Buổi chiều/tối khi tan sở):**
    - Trước khi rời văn phòng, bấm nút **Chấm công RA**. Hệ thống chốt tổng thời gian làm việc trong ngày và cập nhật ngay vào biểu đồ nhiệt *Tổng quan chuyên cần*.
+

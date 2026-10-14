@@ -991,23 +991,23 @@ Asset{} {assets_link} created for {},Nội dung {} {asset_link} được tạo c
 Assign,Chỉ định
 Assign Condition,Chỉ định điều kiện
 "Assign one by one, in sequence","Chỉ định từng cái một, theo thứ tự"
-Assign To,Để gán
-Assign to me,Gán cho tôi
-Assign to Name,Chỉ định cho Tên
-Assign To Name,Gán Tên
-Assign to the one who has the least assignments,Chỉ định cho người có ít bài tập nhất
-Assign To Users,Chỉ định cho người dùng
-Assigned,giao
-Assigned By,Giao By
-Assigned By Full Name,Giao By Tên đầy đủ
-Assigned By Me,Giao By Me
-Assigned To,Để giao
-Assigned To/Owner,Để giao / chủ sở hữu
-Assignment,Chuyển nhượng
-Assignment closed by {0},Chuyển nhượng đóng cửa bởi {0}
-Assignment Complete,Assignment Complete
-Assignment Completed,phân Hoàn thành
-Assignment for {0} {1},Bài tập cho {0} {1}
+Assign To,Phân công
+Assign to me,Nhận việc này
+Assign to Name,Phân công theo tên
+Assign To Name,Phân công theo tên
+Assign to the one who has the least assignments,Phân công cho người có ít việc nhất
+Assign To Users,Phân công cho nhân viên
+Assigned,Đã phân công
+Assigned By,Người giao việc
+Assigned By Full Name,Tên người giao việc
+Assigned By Me,Việc tôi đã giao
+Assigned To,Người phụ trách
+Assigned To/Owner,Người phụ trách / Người tạo
+Assignment,Phân công công việc
+Assignment closed by {0},Phân công đã đóng bởi {0}
+Assignment Complete,Hoàn thành công việc
+Assignment Completed,Đã hoàn thành công việc
+Assignment for {0} {1},Nhiệm vụ cho {0} {1}
 Assignment Rule,Quy tắc chuyển nhượng
 Assignment Rule User,Quy tắc chuyển nhượng người dùng
 Assignment Rules,Quy tắc chuyển nhượng
@@ -10413,7 +10413,7 @@ To Address 2,Đến địa chỉ 2
 To Amount,Số tiền Đến
 To be delivered to customer,Sẽ được chuyển giao cho khách hàng
 To Be Paid,Được trả tiền
-To Bill,Tới hóa đơn
+To Bill,Chờ xuất hóa đơn
 To create a Bank Account,Tài khoản None
 To create a Payment Request reference document is required,Để tạo tài liệu tham chiếu yêu cầu thanh toán là bắt buộc
 To create a Tax Account,Tài khoản None
@@ -10430,8 +10430,8 @@ To Date must be greater than From Date,Đến ngày phải lớn hơn từ ngày
 To Date should be greater than From Date,Ngày None
 To Date should be within the Fiscal Year. Assuming To Date = {0},Đến ngày phải được trong năm tài chính. Giả sử Đến ngày = {0}
 To Datetime,Tới ngày giờ
-To Deliver,Giao hàng
-To Deliver and Bill,Giao hàng và thanh toán
+To Deliver,Chờ xuất kho giao hàng
+To Deliver and Bill,Chờ xuất kho & Xuất hóa đơn
 To Delivery Date,Ngày None
 To Discuss,Để thảo luận
 To Do List,Danh sách None

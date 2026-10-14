@@ -801,3 +801,15 @@ def get_energy_points_heatmap_data(user: str, date: str | None = None):
     except Exception as e:
         print("! Bỏ qua patch html:", e)
 
+    # 4. Chuẩn hóa bản dịch tiếng Việt cho chức năng Phân công (Assign To / Assigned To)
+    frappe_vi_path = "/home/frappe/frappe-bench/apps/frappe/frappe/translations/vi.csv"
+    try:
+        with open(frappe_vi_path, "r", encoding="utf-8") as f:
+            c = f.read()
+        c = c.replace("Assigned To,Để giao", "Assigned To,Người phụ trách")
+        c = c.replace("Assign To,Giao cho", "Assign To,Phân công")
+        with open(frappe_vi_path, "w", encoding="utf-8") as f:
+            f.write(c)
+    except Exception as e:
+        print("! Bỏ qua patch frappe vi.csv:", e)
+
