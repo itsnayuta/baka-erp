@@ -126,6 +126,32 @@ def get_attendance_status(user=None):
     total_days = len(worked_dates)
     on_time_count = max(0, total_days - late_count)
 
+    # Trạng thái ca làm việc hôm nay
+    if not today_in:
+        shift_status = "NOT_CHECKED_IN"
+        status_label = "Chưa vào ca"
+        status_color = "#eab308"
+        work_hours_str = "0 giờ 0 phút"
+    elif today_in and not today_out:
+        shift_status = "CHECKED_IN"
+        status_label = "Đang trong ca làm việc"
+        status_color = "#16a34a"
+        first_in_dt = [c.time for c in today_checkins if c.log_type == "IN"][0]
+        sec = max(0, (now_datetime() - first_in_dt).total_seconds())
+        h = int(sec // 3600)
+        m = int((sec % 3600) // 60)
+        work_hours_str = f"{h} giờ {m} phút"
+    else:
+        shift_status = "CHECKED_OUT"
+        status_label = "Đã hoàn thành ca làm việc"
+        status_color = "#0284c7"
+        first_in_dt = [c.time for c in today_checkins if c.log_type == "IN"][0]
+        last_out_dt = [c.time for c in today_checkins if c.log_type == "OUT"][-1]
+        sec = max(0, (last_out_dt - first_in_dt).total_seconds())
+        h = int(sec // 3600)
+        m = int((sec % 3600) // 60)
+        work_hours_str = f"{h} giờ {m} phút"
+
     return {
         "employee_id": emp.name,
         "employee_name": emp.employee_name,
@@ -137,6 +163,10 @@ def get_attendance_status(user=None):
         "today_date": today,
         "today_in": today_in,
         "today_out": today_out,
+        "shift_status": shift_status,
+        "status_label": status_label,
+        "status_color": status_color,
+        "work_hours_str": work_hours_str,
         "last_log": last_log_dict,
         "today_logs_count": len(today_checkins),
         "today_logs": [
@@ -157,7 +187,7 @@ def get_attendance_status(user=None):
 
 @frappe.whitelist()
 def checkin(log_type="IN"):
-    """Thực hiện Check In / Check Out với xác thực IP mạng WiFi"""
+    """Thực hiện Check In / Check Out với xác thực IP mạng WiFi và chống spam triệt để"""
     user = frappe.session.user
     if user == "Guest":
         frappe.throw(_("Vui lòng đăng nhập để chấm công!"))
@@ -181,7 +211,37 @@ def checkin(log_type="IN"):
     now = now_datetime()
     today = nowdate()
 
-    # Tính toán trạng thái Đi muộn / Về sớm
+    # 1. Kiểm tra các bản ghi hôm nay để chống spam & quản lý trạng thái ca
+    today_checkins = frappe.get_all(
+        "Employee Checkin",
+        filters={"employee": emp.name, "date": today},
+        fields=["name", "log_type", "time", "status"],
+        order_by="time asc"
+    )
+
+    existing_in = next((c for c in today_checkins if c.log_type == "IN"), None)
+    existing_out = next((c for c in reversed(today_checkins) if c.log_type == "OUT"), None)
+    last_log = today_checkins[-1] if today_checkins else None
+
+    # 2. Khóa Cooldown 5 phút (300 giây) chống spam bấm liên tục
+    if last_log:
+        last_time = last_log.time
+        diff_sec = (now - last_time).total_seconds()
+        if diff_sec < 300:
+            remaining = int(300 - diff_sec)
+            last_time_str = last_time.strftime("%H:%M:%S") if hasattr(last_time, "strftime") else str(last_time)[11:19]
+            frappe.throw(_(f"Bạn vừa mới chấm công lúc {last_time_str}. Vui lòng đợi thêm {remaining} giây (ít nhất 5 phút giữa 2 lần bấm) để tránh trùng lặp dữ liệu!"))
+
+    # 3. Quản lý logic ca làm việc chuẩn
+    if log_type == "IN":
+        if existing_in:
+            in_time_str = existing_in.time.strftime("%H:%M:%S") if hasattr(existing_in.time, "strftime") else str(existing_in.time)[11:19]
+            frappe.throw(_(f"Bạn đã chấm công VÀO ca lúc {in_time_str} hôm nay rồi! Mỗi ngày chỉ chấm công Vào 1 lần."))
+    elif log_type == "OUT":
+        if not existing_in:
+            frappe.throw(_("Bạn chưa chấm công VÀO ca hôm nay! Vui lòng bấm 'Chấm công VÀO' trước khi ra ca."))
+
+    # 4. Tính toán trạng thái Đi muộn / Về sớm
     status = "Hợp lệ"
     now_time = now.time()
 
@@ -206,6 +266,30 @@ def checkin(log_type="IN"):
     if len(user_agent) > 140:
         user_agent = user_agent[:140]
 
+    time_str = now.strftime("%H:%M:%S")
+
+    # 5. Nếu đã có bản ghi OUT hôm nay mà nhân viên bấm OUT tiếp (sau > 5 phút - tăng ca về muộn hơn)
+    # -> Cập nhật đè lại thời gian của bản ghi OUT hôm nay thay vì tạo thêm dòng rác!
+    if log_type == "OUT" and existing_out:
+        frappe.db.set_value("Employee Checkin", existing_out.name, {
+            "time": now,
+            "status": status,
+            "device_info": user_agent,
+            "ip_address": client_ip,
+            "wifi_ssid": wifi_ssid
+        })
+        frappe.db.commit()
+        return {
+            "success": True,
+            "name": existing_out.name,
+            "log_type": "OUT",
+            "action_label": "HẾT CA (Cập nhật giờ về)",
+            "time": time_str,
+            "status": status,
+            "message": f"✓ Đã cập nhật giờ HẾT CA mới lúc {time_str} thành công! (Trạng thái: {status})"
+        }
+
+    # Tạo bản ghi mới cho IN hoặc OUT đầu tiên
     checkin_doc = frappe.get_doc({
         "doctype": "Employee Checkin",
         "employee": emp.name,
@@ -222,7 +306,6 @@ def checkin(log_type="IN"):
     frappe.db.commit()
 
     action_label = "VÀO CA (Check In)" if log_type == "IN" else "HẾT CA (Check Out)"
-    time_str = now.strftime("%H:%M:%S")
 
     return {
         "success": True,

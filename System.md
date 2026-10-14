@@ -64,7 +64,7 @@ Nằm ở cột bên trái màn hình, cung cấp thông tin định danh và b�
 
 ---
 
-### 2.2. Thẻ Chấm công WiFi BAKA (WiFi Attendance Card)
+### 2.2. Thẻ Chấm công WiFi BAKA (WiFi Attendance Card) & Cơ chế Chống Spam
 
 Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nhận thời gian làm việc duy nhất của hệ thống:
 
@@ -72,15 +72,21 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
    - Bắt buộc nhân viên phải kết nối đúng mạng WiFi văn phòng (`BAKA-OFFICE-5G`).
    - Hệ thống tự động kiểm tra địa chỉ IP truy cập của thiết bị. Nếu nhân viên ở ngoài văn phòng hoặc dùng mạng 4G/mạng lạ, hệ thống sẽ **từ chối chấm công** và phát cảnh báo yêu cầu kết nối đúng WiFi công ty.
 
-2. **Các trạng thái làm việc trong ngày:**
-   - **Chưa chấm công:** Hiển thị nhãn cảnh báo màu vàng, nút `Chấm công VÀO` sẵn sàng.
-   - **Đang làm việc:** Hiển thị nhãn màu xanh lá, ghi nhận thời điểm VÀO (ví dụ: `08:15:30`), đồng hồ đếm tổng thời gian làm việc tính đến hiện tại (`X giờ Y phút`), nút `Chấm công RA` sẵn sàng.
-   - **Đã hoàn thành ca:** Hiển thị nhãn màu xanh đậm, tổng kết giờ VÀO, giờ RA và tổng thời lượng làm việc trong ngày.
+2. **Cơ chế chống spam & Đảm bảo dữ liệu ca làm việc tinh chuẩn:**
+   - **Khóa Cooldown 5 phút (Rate Limiting):** Khoảng cách giữa 2 lần bấm chấm công tối thiểu là 300 giây (5 phút). Nếu bấm liên tục trong vòng 5 phút, hệ thống sẽ chặn lại và thông báo chính xác số giây cần chờ.
+   - **Khóa nút bấm tức thì (Click Lock):** Ngay khi nhân viên click nút chấm công, nút bấm sẽ bị vô hiệu hóa (`disabled`) lập tức để triệt tiêu tình trạng double-click hoặc đa chạm trên màn hình cảm ứng điện thoại.
+   - **Tự động gộp giờ Tăng ca (Overtime Dedup):** Sau khi đã hoàn thành ca, nếu nhân viên ở lại làm thêm giờ và bấm cập nhật giờ ra về (sau > 5 phút), hệ thống sẽ cập nhật đè thời gian mới vào chính bản ghi RA của ngày hôm đó, tuyệt đối không tạo thêm bản ghi rác. Mỗi nhân viên chỉ có đúng 1 bản ghi VÀO và 1 bản ghi RA mỗi ngày.
 
-3. **Các nút tương tác:**
-   - **`Chấm công VÀO` (Check-in):** Ghi nhận bắt đầu ca làm việc buổi sáng.
-   - **`Chấm công RA` (Check-out):** Ghi nhận kết thúc ca làm việc buổi chiều/tối.
-   - **`Xem lịch sử chấm công`:** Chuyển nhanh sang màn hình danh sách nhật ký chấm công chi tiết (`Employee Checkin`).
+3. **Chuyển đổi giao diện theo trạng thái ca làm việc (State-aware UI):**
+   - **Chưa vào ca (`NOT_CHECKED_IN`):** Hiển thị nhãn cảnh báo màu vàng, giao diện chỉ hiển thị duy nhất nút **`Chấm công VÀO`**. Chặn không cho phép bấm RA khi chưa vào ca.
+   - **Đang làm việc (`CHECKED_IN`):** Hiển thị nhãn màu xanh lá (*"Đang trong ca làm việc"*), ghi nhận thời điểm VÀO (ví dụ: `08:15:30`), đồng hồ đếm tổng thời gian làm việc thực tế tính đến hiện tại (`X giờ Y phút`), giao diện chuyển sang duy nhất nút **`Chấm công RA`**. Chặn không cho bấm thêm lần VÀO nào nữa.
+   - **Đã hoàn thành ca (`CHECKED_OUT`):** Hiển thị nhãn màu xanh đậm (*"Đã hoàn thành ca làm việc"*), hiển thị giờ VÀO, giờ RA và tổng thời lượng làm việc trong ngày. Nút thao tác chuyển thành **`Cập nhật giờ RA (Tăng ca)`**.
+
+4. **Các nút tương tác:**
+   - **`Chấm công VÀO` (Check-in):** Ghi nhận bắt đầu ca làm việc.
+   - **`Chấm công RA` (Check-out):** Ghi nhận kết thúc ca làm việc.
+   - **`Cập nhật giờ RA (Tăng ca)`:** Cập nhật lại mốc thời gian ra về muộn hơn cho nhân viên tăng ca.
+   - **`Xem lịch sử chi tiết`:** Chuyển nhanh sang màn hình danh sách nhật ký chấm công chi tiết (`Employee Checkin`).
 
 ---
 

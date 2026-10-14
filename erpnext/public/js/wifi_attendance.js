@@ -222,6 +222,12 @@ baka.attendance = {
 	},
 
 	do_checkin: function (log_type, callback) {
+		const $card = $(".baka-profile-attendance-card");
+		const $btns = $card.find(".baka-checkin-btn, .baka-checkout-btn");
+		
+		// Khóa ngay lập tức nút vừa bấm để chống spam/double click
+		$btns.prop("disabled", true).css("opacity", "0.6");
+
 		frappe.call({
 			method: "erpnext.setup.wifi_attendance.checkin",
 			args: { log_type: log_type },
@@ -233,11 +239,14 @@ baka.attendance = {
 						message: r.message.message,
 						indicator: "green",
 					});
-					this.fetch_status(() => {
+					this.fetch_status(frappe.session.user, () => {
 						if (callback) callback(r.message);
 					});
 				}
 			},
+			always: () => {
+				$btns.prop("disabled", false).css("opacity", "1");
+			}
 		});
 	},
 
@@ -295,16 +304,42 @@ baka.attendance = {
 
 			let action_section_html = "";
 			if (is_own_profile) {
+				let checkin_buttons = "";
+				if (s.shift_status === "NOT_CHECKED_IN") {
+					checkin_buttons = `
+						<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
+							<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Check In)
+						</button>
+					`;
+				} else if (s.shift_status === "CHECKED_IN") {
+					checkin_buttons = `
+						<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+							<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
+							Đang làm việc (Vào: <b>${s.today_in || ''}</b> • Đã làm: <b>${s.work_hours_str || ''}</b>)
+						</div>
+						<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 160px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
+							<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
+						</button>
+					`;
+				} else {
+					checkin_buttons = `
+						<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 12px;">
+							<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
+							Đã hoàn thành ca (Vào: <b>${s.today_in}</b> • Ra: <b>${s.today_out}</b> • Tổng: <b>${s.work_hours_str}</b>)
+						</div>
+						<button class="btn btn-default baka-checkout-btn" style="padding: 9px 18px; font-weight: 600; font-size: 13px; color: #0284c7; border-color: #cbd5e1;" title="Cập nhật giờ nếu bạn làm thêm giờ về muộn hơn">
+							<i class="fa fa-refresh" style="margin-right: 4px;"></i> Cập nhật giờ RA (Tăng ca)
+						</button>
+					`;
+				}
+
 				action_section_html = `
-					<div style="display: flex; gap: 12px; flex-wrap: wrap;">
-						<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a;">
-							<i class="fa fa-sign-in"></i> Chấm công VÀO (Check In)
-						</button>
-						<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7;">
-							<i class="fa fa-sign-out"></i> Chấm công RA (Check Out)
-						</button>
-						<button class="btn btn-default baka-view-history-btn" style="padding: 10px 16px; font-weight: 500;">
-							<i class="fa fa-list"></i> Xem lịch sử chi tiết
+					<div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; background: var(--fg-color, #f8fafc); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0);">
+						<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1;">
+							${checkin_buttons}
+						</div>
+						<button class="btn btn-default baka-view-history-btn" style="padding: 9px 16px; font-weight: 500;">
+							<i class="fa fa-list" style="margin-right: 4px;"></i> Xem lịch sử chi tiết
 						</button>
 					</div>
 				`;
@@ -313,7 +348,7 @@ baka.attendance = {
 					<div style="display: flex; justify-content: space-between; align-items: center; background: var(--fg-color, #f8fafc); border: 1px dashed var(--border-color, #cbd5e1); border-radius: 8px; padding: 12px 18px; flex-wrap: wrap; gap: 10px;">
 						<div style="font-size: 13px; color: var(--text-muted, #64748b);">
 							<i class="fa fa-info-circle" style="color: #0284c7; margin-right: 6px;"></i>
-							Đang xem dữ liệu chấm công của nhân viên: <b style="color: var(--text-color, #1e293b);">${frappe.utils.escape_html(s.employee_name)}</b>
+							Đang xem dữ liệu chấm công của nhân viên: <b style="color: var(--text-color, #1e293b);">${frappe.utils.escape_html(s.employee_name)}</b> (${s.status_label || ''})
 						</div>
 						<button class="btn btn-default btn-sm baka-view-history-btn" style="font-weight: 500;">
 							<i class="fa fa-list"></i> Xem lịch sử chi tiết
@@ -356,17 +391,17 @@ baka.attendance = {
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Ngày Công Tháng Này</div>
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Thời Gian Làm Việc</div>
 									<div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-top: 4px;">
-										${s.stats.total_days} ngày
+										${s.work_hours_str || "0 giờ 0 phút"}
 									</div>
 								</div>
 							</div>
 							<div class="col-sm-3 col-xs-6" style="margin-bottom: 10px;">
 								<div style="background: var(--fg-color, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; text-align: center;">
-									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Đúng Giờ / Đi Muộn</div>
-									<div style="font-size: 20px; font-weight: 700; margin-top: 4px;">
-										<span style="color: #16a34a;">${s.stats.on_time_count}</span> / <span style="color: #dc2626;">${s.stats.late_count}</span>
+									<div style="font-size: 12px; color: var(--text-muted, #64748b);">Trạng Thái Ca</div>
+									<div style="font-size: 17px; font-weight: 700; color: ${s.status_color || '#16a34a'}; margin-top: 6px;">
+										${s.status_label || "Chưa vào ca"}
 									</div>
 								</div>
 							</div>
