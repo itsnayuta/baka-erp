@@ -84,7 +84,7 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
    - **Không cần thời gian chờ (Không cooldown):** Nhân viên có thể chấm công ngay lập tức khi chuyển ca hoặc ra vào văn phòng mà không bị khóa chờ 5 phút như trước.
    - **Chống spam & chống bấm nhầm:**
      - Đang ngoài ca (hoặc đầu ngày): Giao diện chỉ hiển thị duy nhất nút **`Chấm công VÀO`** (hoặc `Chấm công VÀO (Ca tiếp theo)`). Chặn không cho phép bấm RA.
-     - Đang trong ca: Giao diện tự động chuyển sang duy nhất nút **`Chấm công RA`**, hiển thị rõ ca đang làm và thời gian làm việc. Chặn không cho phép bấm VÀO tiếp.
+     - Đang trong ca: Giao diện tự động chuyển sang duy nhất nút **`Chấm công RA`**, hiển thị trạng thái tinh gọn *Đang trong ca làm việc* (loại bỏ phần chú thích chi tiết vào lúc / hôm nay cạnh nút để tránh trùng lặp với 4 thẻ chỉ số phía trên). Chặn không cho phép bấm VÀO tiếp.
      - **Khóa nút bấm tức thì (Click Lock):** Nút bấm lập tức vô hiệu hóa khi chạm chuột/màn hình cảm ứng trong lúc gửi dữ liệu để triệt tiêu lỗi double-click.
 
 4. **Giới hạn 10 lần chấm công/ngày & Khóa nút an toàn:**
@@ -106,8 +106,9 @@ Nằm tại vị trí trên cùng của khu vực chính, là công cụ ghi nh�
 
 - **Tiêu đề khối:** `Tổng quan chuyên cần`.
 - **Cơ chế tính điểm & Đổ màu:**
-  - **Công thức tính điểm:** **Cứ tròn 1 tiếng làm việc thực tế = 1 điểm chuyên cần**, hoàn toàn **không lấy phần thập phân** (số nguyên: 1, 2, 3,..., tối đa **8 điểm/ngày**).
-    *(Ví dụ: Làm 3 giờ 25 phút $\rightarrow$ tính tròn 3 điểm; Làm 8 giờ 20 phút $\rightarrow$ đạt tối đa 8 điểm)*.
+  - **Công thức tính điểm:** **Cứ tròn 1 tiếng làm việc thực tế = 1 điểm chuyên cần**, hoàn toàn **không lấy phần thập phân**, làm tròn xuống theo từng ngày (số nguyên: 1, 2, 3,..., tối đa **8 điểm/ngày**).
+    *(Ví dụ: Làm 7 giờ 23 phút $\rightarrow$ làm tròn xuống chỉ tính 7 điểm; Làm 8 giờ 20 phút $\rightarrow$ đạt tối đa 8 điểm)*.
+  - **Tổng điểm chuyên cần:** Tổng số điểm tích lũy luôn là **một số nguyên hoàn chỉnh**, tuyệt đối không có số lẻ thập phân.
   - **Chu kỳ tính theo năm:** Điểm chuyên cần được tính lũy kế theo năm dương lịch (từ ngày 01/01 đến 31/12). Hết 1 năm hệ thống sẽ tự động reset về 0 để bắt đầu chu kỳ đánh giá năm mới.
   - Đối với ca làm việc $\ge 5$ giờ, hệ thống tự động khấu trừ 1 giờ nghỉ trưa chuẩn để tính thời gian làm việc thực tế.
   - **Mức độ xanh (Color Intensity) theo các mốc 2, 4, 6, 8 điểm:**

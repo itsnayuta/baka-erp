@@ -96,24 +96,28 @@ baka.attendance = {
 						if (r && r[this.user_id]) {
 							this.energy_points = r[this.user_id].energy_points || 0;
 						}
-						this.chuyen_can_points = (cc && cc.total_points != null) ? cc.total_points : 0;
+						this.chuyen_can_points = (cc && cc.total_points != null) ? Math.floor(Number(cc.total_points)) : 0;
 						this.review_points = this.chuyen_can_points;
 					});
 				};
 
 				// 4. Hook render_points_and_rank:
 				// - Đổi tên cột 1: Điểm đánh giá (thay cho Điểm năng lượng)
-				// - Đổi tên cột 2: Điểm chuyên cần (thay cho Điểm đánh giá cũ)
+				// - Đổi tên cột 2: Điểm chuyên cần (số nguyên hoàn chỉnh)
 				frappe.ui.UserProfile.prototype.render_points_and_rank = function () {
 					let $profile_details = this.wrapper.find(".user-stats");
 					let $profile_details_wrapper = this.wrapper.find(".user-stats-detail");
 					$profile_details.empty();
 
 					const _get_stat_dom = (value, label, icon) => {
+						let display_val = value;
+						if (label === __("Điểm chuyên cần")) {
+							display_val = Math.floor(Number(value || 0));
+						}
 						return `<div class="user-stats-item mt-4">
 							${frappe.utils.icon(icon, "lg", "no-stroke")}
 							<div>
-								<div class="stat-value">${value}</div>
+								<div class="stat-value">${display_val}</div>
 								<div class="stat-label">${label}</div>
 							</div>
 						</div>`;
@@ -134,7 +138,7 @@ baka.attendance = {
 					});
 				};
 
-				// 5. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (đủ 8h = 1 điểm, tính theo năm)
+				// 5. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (mốc 2, 4, 6, 8 điểm, tính theo năm)
 				frappe.ui.UserProfile.prototype.update_heatmap_data = function (date) {
 					frappe.xcall("erpnext.setup.wifi_attendance.get_chuyen_can_heatmap_data", {
 						user: this.user_id,
@@ -329,7 +333,7 @@ baka.attendance = {
 						checkin_buttons = `
 							<div style="font-size: 13px; color: #16a34a; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 								<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 8px;"></span>
-								${s.status_label} (Vào lúc: <b>${s.last_log ? s.last_log.time : s.today_in}</b> • Hôm nay: <b>${s.work_hours_str || ''}</b>)
+								${s.status_label}
 							</div>
 							<button class="btn btn-info baka-checkout-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">
 								<i class="fa fa-sign-out" style="margin-right: 6px;"></i> Chấm công RA (Check Out)
@@ -339,7 +343,7 @@ baka.attendance = {
 						checkin_buttons = `
 							<div style="font-size: 13px; color: #0284c7; font-weight: 600; display: flex; align-items: center; margin-right: 16px;">
 								<i class="fa fa-check-circle" style="margin-right: 6px; color: #16a34a; font-size: 15px;"></i>
-								${s.status_label} (Hôm nay đã làm: <b>${s.work_hours_str}</b>)
+								${s.status_label}
 							</div>
 							<button class="btn btn-primary baka-checkin-btn" style="min-width: 180px; padding: 10px 24px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.2);">
 								<i class="fa fa-sign-in" style="margin-right: 6px;"></i> Chấm công VÀO (Ca tiếp theo)

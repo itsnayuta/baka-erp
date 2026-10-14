@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, nowdate, getdate, get_time, time_diff_in_hours
 import fnmatch
+import math
 
 def get_client_ip():
     try:
@@ -385,8 +386,8 @@ def get_daily_work_hours_and_points(employee_id, year=None):
             day_seconds -= 3600
 
         raw_hours = max(0.0, day_seconds / 3600.0)
-        # Cứ tròn 1 tiếng là 1 điểm, không lấy thập phân, tối đa 8 điểm/ngày
-        points = min(8, int(raw_hours))
+        # Cứ tròn 1 tiếng là 1 điểm, làm tròn xuống (ví dụ 7 tiếng 23 phút = 7 điểm), tối đa 8 điểm/ngày
+        points = min(8, int(math.floor(raw_hours)))
 
         result[d_str] = {
             "hours": round(raw_hours, 1),
@@ -400,7 +401,8 @@ def get_chuyen_can_summary(user=None, year=None):
     """
     Lấy tổng điểm chuyên cần tích lũy trong năm của nhân viên:
     - Tính theo năm (hết 1 năm thì reset 1 lần).
-    - Cứ tròn 1 tiếng là 1 điểm, không lấy thập phân (tối đa 8 điểm/ngày).
+    - Cứ tròn 1 tiếng là 1 điểm, làm tròn xuống (ví dụ 7 tiếng 23 phút = 7 điểm), tối đa 8 điểm/ngày.
+    - Điểm chuyên cần tổng luôn là 1 số nguyên hoàn chỉnh.
     """
     if not user:
         user = frappe.session.user
@@ -410,9 +412,9 @@ def get_chuyen_can_summary(user=None, year=None):
     cur_year = str(year) if year else nowdate()[:4]
     emp = get_employee_for_user(user)
     daily_data = get_daily_work_hours_and_points(emp.name, year=cur_year)
-    total_points = sum(d["points"] for d in daily_data.values())
+    total_points = int(math.floor(sum(d["points"] for d in daily_data.values())))
     today_str = nowdate()
-    today_points = daily_data.get(today_str, {}).get("points", 0)
+    today_points = int(math.floor(daily_data.get(today_str, {}).get("points", 0)))
 
     return {
         "year": cur_year,
