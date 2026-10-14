@@ -149,7 +149,8 @@ Việt Nam"""
     bloat_workspaces = [
         "Integration", "Integrations", "Settings", "ERPNext Settings", 
         "ERPNext Integrations", "Non Profit", "Agriculture", "Healthcare", 
-        "Hospitality", "Quality", "Build", "Welcome Workspace", "Tools", "Website"
+        "Hospitality", "Quality", "Build", "Welcome Workspace", "Tools", "Website",
+        "Manufacturing", "Projects", "Assets", "Support"
     ]
     for ws in bloat_workspaces:
         if frappe.db.exists("Workspace", ws):

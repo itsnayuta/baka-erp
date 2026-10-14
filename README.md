@@ -1,89 +1,129 @@
+# BAKAERP - Hệ Thống Quản Trị Doanh Nghiệp (ERP) Ngành Thức Uống Dinh Dưỡng
+
 <div align="center">
-    <a href="https://erpnext.com">
-        <img src="https://raw.githubusercontent.com/frappe/erpnext/develop/erpnext/public/images/erpnext-logo.png" height="128">
-    </a>
-    <h2>ERPNext</h2>
-    <p align="center">
-        <p>ERP made simple</p>
-    </p>
-
-[![CI](https://github.com/frappe/erpnext/actions/workflows/server-tests.yml/badge.svg?branch=develop)](https://github.com/frappe/erpnext/actions/workflows/server-tests.yml)
-[![UI](https://github.com/erpnext/erpnext_ui_tests/actions/workflows/ui-tests.yml/badge.svg?branch=develop&event=schedule)](https://github.com/erpnext/erpnext_ui_tests/actions/workflows/ui-tests.yml)
-[![Open Source Helpers](https://www.codetriage.com/frappe/erpnext/badges/users.svg)](https://www.codetriage.com/frappe/erpnext)
-[![codecov](https://codecov.io/gh/frappe/erpnext/branch/develop/graph/badge.svg?token=0TwvyUg3I5)](https://codecov.io/gh/frappe/erpnext)
-[![docker pulls](https://img.shields.io/docker/pulls/frappe/erpnext-worker.svg)](https://hub.docker.com/r/frappe/erpnext-worker)
-
-[https://erpnext.com](https://erpnext.com)
-
+  <h2>BAKAERP v15</h2>
+  <p><b>Hệ thống ERP tối ưu hóa cho doanh nghiệp Việt Nam, ngành hàng đồ uống dinh dưỡng & tinh bột kháng</b></p>
+  <p>Chuẩn hóa Kế toán TT 200/133 • Chấm công WiFi • Điểm chuyên cần 8đ/ngày • Quản lý Đơn hàng & Kho vận khép kín</p>
 </div>
 
-ERPNext as a monolith includes the following areas for managing businesses:
+---
 
-1. [Accounting](https://erpnext.com/open-source-accounting)
-1. [Warehouse Management](https://erpnext.com/distribution/warehouse-management-system)
-1. [CRM](https://erpnext.com/open-source-crm)
-1. [Sales](https://erpnext.com/open-source-sales-purchase)
-1. [Purchase](https://erpnext.com/open-source-sales-purchase)
-1. [HRMS](https://erpnext.com/open-source-hrms)
-1. [Project Management](https://erpnext.com/open-source-projects)
-1. [Support](https://erpnext.com/open-source-help-desk-software)
-1. [Asset Management](https://erpnext.com/open-source-asset-management-software)
-1. [Quality Management](https://erpnext.com/docs/user/manual/en/quality-management)
-1. [Manufacturing](https://erpnext.com/open-source-manufacturing-erp-software)
-1. [Website Management](https://erpnext.com/open-source-website-builder-software)
-1. [Customize ERPNext](https://erpnext.com/docs/user/manual/en/customize-erpnext)
-1. [And More](https://erpnext.com/docs/user/manual/en/)
+## 1. Giới thiệu tổng quan
 
-ERPNext is built on the [Frappe Framework](https://github.com/frappe/frappe), a full-stack web app framework built with Python & JavaScript.
+**BAKAERP** là giải pháp ERP toàn diện được tùy biến chuyên sâu trên nền tảng **ERPNext / Frappe v15 (Docker Container)**, thiết kế riêng cho mô hình kinh doanh các sản phẩm thức uống dinh dưỡng:
+- **Tinh bột kháng PLUS**
+- **Tinh bột kháng CACAO**
+- **Tinh bột kháng TIBOKA**
 
-## Installation
+Hệ thống được bản địa hóa và cấu hình chuẩn theo quy định vận hành của doanh nghiệp Việt Nam:
+- **Tiền tệ chuẩn:** Chỉ hỗ trợ **VND** (đồng tiền cơ sở) và **USD** (quy đổi tỷ giá tự động 25.400 VND/USD).
+- **Hệ thống tài khoản kế toán:** Áp dụng hệ thống tài khoản theo **Thông tư 200/133** (1111, 1121, 1311, 1561, 3311, 5111,...).
+- **Chu kỳ tài chính:** Niên độ tài chính năm dương lịch Việt Nam (01/01 đến 31/12).
+- **Giao diện tinh gọn:** Loại bỏ hoàn toàn các phân hệ không dùng (Sản xuất phức tạp, Dự án, Y tế, Nông nghiệp, Phi lợi nhuận,...), chỉ giữ lại các không gian làm việc phục vụ trực tiếp cho Bán hàng, Kho, Kế toán và Nhân sự.
 
-<div align="center" style="max-height: 40px;">
-    <a href="https://frappecloud.com/erpnext/signup">
-        <img src=".github/try-on-f-cloud-button.svg" height="40">
-    </a>
-    <a href="https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/frappe/frappe_docker/main/pwd.yml">
-      <img src="https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png" alt="Try in PWD" height="37"/>
-    </a>
-</div>
+---
 
-> Login for the PWD site: (username: Administrator, password: admin)
+## 2. Cơ cấu tổ chức & Danh sách tài khoản thử nghiệm
 
-### Containerized Installation
+Tất cả tài khoản trong hệ thống sử dụng **mật khẩu chung:** `123`
 
-Use docker to deploy ERPNext in production or for development of [Frappe](https://github.com/frappe/frappe) apps. See https://github.com/frappe/frappe_docker for more details.
+| Email đăng nhập | Họ và tên | Chức danh | Quyền hạn & Phân hệ phụ trách |
+| :--- | :--- | :--- | :--- |
+| **`chutich@baka.vn`** | Bùi Chủ Tịch | Chủ tịch HĐQT | Toàn quyền Quản trị & Giám sát cấp cao (`System Manager`) |
+| **`coo@baka.vn`** | Trần Vận Hành | Giám đốc Vận hành | Điều hành toàn diện hệ thống, duyệt đơn hàng, phê duyệt chính sách (`System Manager`) |
+| **`sale1@baka.vn`** | Nguyễn Văn Nam | Chuyên viên Kinh doanh 1 | Phụ trách thị trường Miền Bắc & Đại lý (`Sales User`, `Stock User`, `Desk User`) |
+| **`sale2@baka.vn`** | Trần Thị Mai | Chuyên viên Kinh doanh 2 | Phụ trách thị trường Miền Nam & Chuỗi bán lẻ (`Sales User`, `Stock User`, `Desk User`) |
+| **`kho@baka.vn`** | Phạm Quản Kho | Quản lý Kho | Quản lý kho `Finished Goods - B`, Nhập/Xuất kho (`Stock Manager`, `Stock User`, `Desk User`) |
 
-### Manual Install
+---
 
-The Easy Way: our install script for bench will install all dependencies (e.g. MariaDB). See https://github.com/frappe/bench for more details.
+## 3. Danh mục sản phẩm & Bảng giá niêm yết
 
-New passwords will be created for the ERPNext "Administrator" user, the MariaDB root user, and the frappe user (the script displays the passwords and saves them to ~/frappe_passwords.txt).
+Tất cả sản phẩm là hàng hóa tồn kho quản lý theo đơn vị tính **Hộp**, thuộc nhóm mặt hàng **Thức uống dinh dưỡng**:
 
+| Mã sản phẩm | Tên sản phẩm | Đơn vị tính | Giá bán niêm yết (VND) | Giá vốn định mức (VND) |
+| :--- | :--- | :---: | :---: | :---: |
+| **`TBK-PLUS`** | Tinh bột kháng PLUS | Hộp | **365.000** | 200.000 |
+| **`TBK-CACAO`** | Tinh bột kháng CACAO | Hộp | **265.000** | 150.000 |
+| **`TBK-TIBOKA`** | Tinh bột kháng TIBOKA | Hộp | **250.000** | 140.000 |
 
-## Learning and community
+- **Bảng giá chuẩn:** `Standard Selling` (bán ra) và `Standard Buying` (mua vào) đều sử dụng đơn vị tiền tệ **VND**.
+- **Tỷ giá quy đổi:** Tích hợp bảng tỷ giá tự động giữa `USD` và `VND` (1 USD = 25.400 VND).
 
-1. [Frappe School](https://school.frappe.io) - Learn Frappe Framework and ERPNext from the various courses by the maintainers or from the community.
-2. [Official documentation](https://docs.erpnext.com/) - Extensive documentation for ERPNext.
-3. [Discussion Forum](https://discuss.frappe.io/c/erpnext/6) - Engage with community of ERPNext users and service providers.
-4. [Telegram Group](https://erpnext_public.t.me) - Get instant help from huge community of users.
+---
 
+## 4. Các tính năng & Phân hệ cốt lõi
 
-## Contributing
+### 4.1. Chấm công WiFi Văn phòng & Điểm Chuyên cần
+Module chấm công thế hệ mới được tích hợp trực tiếp vào màn hình **My Profile** của nhân viên:
+- **Xác thực kết nối WiFi:** Bắt buộc kết nối đúng WiFi công ty (`BAKA-OFFICE-5G`) để ghi nhận thời gian vào/ra; tự động phát hiện IP và cảnh báo nếu sử dụng mạng ngoài.
+- **Điểm chuyên cần (Attendance Points):**
+  - Công thức tính: **1 giờ làm việc thực tế = 1 điểm chuyên cần** (tối đa **8.0 điểm/ngày**).
+  - Biểu đồ nhiệt (Heatmap) trong hồ sơ cá nhân tự động tính theo Điểm chuyên cần: làm đủ ca chuẩn 8 tiếng sẽ hiển thị **ô xanh đậm tối đa**.
+  - Di chuột vào ô xanh trên biểu đồ hiển thị chính xác nhãn: `X Điểm chuyên cần`.
+- **Điểm đánh giá (Assessment Points):** Ghi nhận điểm thưởng, hiệu suất và đóng góp công việc của từng nhân sự trong tháng.
 
-1. [Issue Guidelines](https://github.com/frappe/erpnext/wiki/Issue-Guidelines)
-1. [Report Security Vulnerabilities](https://erpnext.com/security)
-1. [Pull Request Requirements](https://github.com/frappe/erpnext/wiki/Contribution-Guidelines)
-1. [Translations](https://translate.erpnext.com)
+### 4.2. Quản lý Bán hàng & Phân phối (Selling & Distribution)
+- Quản lý danh bạ Đại lý, Khách sỉ và Chuỗi cửa hàng (`Customer`).
+- Tạo và phê duyệt Đơn đặt hàng bán (`Sales Order`), áp dụng bảng giá niêm yết tự động.
+- Liên kết liền mạch từ Đơn bán hàng sang Phiếu xuất kho và Hóa đơn thu tiền.
 
+### 4.3. Quản lý Kho vận & Tồn kho (Stock & Warehouse)
+- Quản lý kho hàng thành phẩm trung tâm: `Finished Goods - B`.
+- Nhập kho ban đầu (`Material Receipt`), Xuất kho giao hàng (`Delivery Note`).
+- Kiểm soát tồn kho tức thời (Real-time Stock Balance), chặn xuất âm kho, đảm bảo số liệu thực tế khớp 100% với kế toán hàng tồn kho (Tài khoản 1561).
 
-## License
+### 4.4. Kế toán Tài chính theo Thông tư 200/133
+- Xuất Hóa đơn bán hàng (`Sales Invoice`) tự động hạch toán Nợ TK 1311 / Có TK 5111.
+- Thu tiền bán hàng qua Chuyển khoản ngân hàng (`Payment Entry`) hạch toán Nợ TK 1121 / Có TK 1311.
+- Theo dõi công nợ chi tiết theo từng đối tác khách hàng và hóa đơn phát sinh.
 
-GNU/General Public License (see [license.txt](license.txt))
+---
 
-The ERPNext code is licensed as GNU General Public License (v3) and the Documentation is licensed as Creative Commons (CC-BY-SA-3.0) and the copyright is owned by Frappe Technologies Pvt Ltd (Frappe) and Contributors.
+## 5. Dữ liệu kinh doanh mô phỏng (Tháng 10/2026)
 
-By contributing to ERPNext, you agree that your contributions will be licensed under its GNU General Public License (v3).
+Hệ thống đã nạp sẵn kịch bản kinh doanh thống nhất trong tháng 10/2026 để kiểm thử trực quan luồng vận hành:
 
-## Logo and Trademark Policy
+1. **Nhập kho ban đầu (01/10/2026):**
+   - 500 hộp `TBK-PLUS` + 500 hộp `TBK-CACAO` + 600 hộp `TBK-TIBOKA` (Tổng giá trị kho ban đầu: 259.000.000 VND).
+2. **7 Đơn đặt hàng bán luân phiên giữa 2 chuyên viên kinh doanh:**
+   - **Đơn 1 đến 5 (02/10 – 12/10):** Đã hoàn tất 100% chu trình (Sales Order $\rightarrow$ Quản lý kho duyệt xuất kho Delivery Note $\rightarrow$ Sales Invoice $\rightarrow$ Thu tiền ngân hàng qua Payment Entry).
+   - **Đơn 6 (13/10 - Healthy Mart):** 80 PLUS + 60 CACAO (45.100.000 VND) — Trạng thái **Chờ xuất kho** (để Quản lý kho đăng nhập thực hiện xuất kho).
+   - **Đơn 7 (14/10 - Đại lý Dinh Dưỡng Xanh):** 50 TIBOKA (12.500.000 VND) — Trạng thái **Mới tạo trong ngày**.
+3. **Số lượng tồn kho thực tế hiện tại:**
+   - `TBK-PLUS`: **340 Hộp**
+   - `TBK-CACAO`: **385 Hộp**
+   - `TBK-TIBOKA`: **480 Hộp**
+4. **Chấm công thực tế tháng 10:**
+   - Đã chấm công đủ ca từ 01/10 đến 13/10 (~8.3h/ngày $\rightarrow$ Đạt mức tối đa **8.0 Điểm chuyên cần/ngày**, hiển thị đầy đủ ô xanh đậm).
+   - **Hôm nay (14/10):** Đã check-in lúc ~08:20, **chưa check-out** để người dùng trực tiếp bấm nút "Chấm công RA" trải nghiệm.
 
-Please read our [Logo and Trademark Policy](TRADEMARK_POLICY.md).
+---
+
+## 6. Hướng dẫn vận hành & Lệnh kỹ thuật
+
+### Khởi động hệ thống
+```bash
+docker compose up -d
+```
+Hệ thống sẽ chạy trên cổng `http://localhost:8080`.
+
+### Cấu hình chuẩn hóa Việt Nam (Chạy khi cần cập nhật cài đặt hệ thống)
+```bash
+docker compose exec backend bench --site frontend execute erpnext.setup.vietnam_setup.run
+```
+
+### Nạp lại toàn bộ dữ liệu mô phỏng tháng 10
+```bash
+docker compose exec backend bench --site frontend execute erpnext.setup.sample_data.run
+```
+
+### Xóa bộ nhớ đệm (Clear cache)
+```bash
+docker compose exec backend bench --site frontend clear-cache
+```
+
+### Biên dịch lại giao diện và tài nguyên tĩnh (Build assets)
+```bash
+docker compose exec backend bench build --app erpnext
+```
