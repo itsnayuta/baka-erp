@@ -258,6 +258,11 @@ def setup_products():
         }
     ]
 
+    # Đảm bảo Price List Standard Selling và Standard Buying là VND
+    for pl in ["Standard Selling", "Standard Buying"]:
+        if frappe.db.exists("Price List", pl):
+            frappe.db.set_value("Price List", pl, "currency", "VND")
+
     for p in products:
         code = p["item_code"]
         if not frappe.db.exists("Item", code):
@@ -283,7 +288,8 @@ def setup_products():
             doc.save(ignore_permissions=True)
 
         # Bảng giá Standard Selling
-        if not frappe.db.exists("Item Price", {"item_code": code, "price_list": "Standard Selling"}):
+        ip_name = frappe.db.get_value("Item Price", {"item_code": code, "price_list": "Standard Selling"})
+        if not ip_name:
             frappe.get_doc({
                 "doctype": "Item Price",
                 "item_code": code,
@@ -291,6 +297,9 @@ def setup_products():
                 "price_list_rate": p["standard_rate"],
                 "currency": "VND"
             }).insert(ignore_permissions=True)
+        else:
+            frappe.db.set_value("Item Price", ip_name, "price_list_rate", p["standard_rate"])
+            frappe.db.set_value("Item Price", ip_name, "currency", "VND")
 
         print(f"✓ Đã tạo sản phẩm: {code} - {p['item_name']} - Giá bán: {p['standard_rate']:,} VND (UOM: Hộp)")
 
@@ -487,6 +496,9 @@ def setup_customers_and_sales_flow():
             "delivery_date": add_days(ord_info["so_date"], 2),
             "order_type": "Sales",
             "currency": "VND",
+            "price_list_currency": "VND",
+            "plc_conversion_rate": 1.0,
+            "conversion_rate": 1.0,
             "selling_price_list": "Standard Selling",
             "owner": ord_info["sales_user"],
             "items": [

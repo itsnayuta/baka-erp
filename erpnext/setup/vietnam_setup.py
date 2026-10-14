@@ -58,6 +58,54 @@ def run():
     except Exception as e:
         print(f"! Website Settings notice: {e}")
 
+    # 1.3. Cấu hình tiền tệ & Tỷ giá (Chỉ kích hoạt VND và USD, chuẩn hóa Bảng giá VND)
+    try:
+        frappe.db.sql("UPDATE `tabCurrency` SET enabled=0 WHERE name NOT IN ('VND', 'USD')")
+        frappe.db.sql("UPDATE `tabCurrency` SET enabled=1 WHERE name IN ('VND', 'USD')")
+        frappe.clear_cache(doctype="Currency")
+
+        for pl in ["Standard Selling", "Standard Buying"]:
+            if frappe.db.exists("Price List", pl):
+                frappe.db.set_value("Price List", pl, "currency", "VND")
+            else:
+                frappe.get_doc({
+                    "doctype": "Price List",
+                    "price_list_name": pl,
+                    "currency": "VND",
+                    "selling": 1 if "Selling" in pl else 0,
+                    "buying": 1 if "Buying" in pl else 0,
+                    "enabled": 1
+                }).insert(ignore_permissions=True)
+
+        # Cập nhật Item Price về VND
+        frappe.db.sql("UPDATE `tabItem Price` SET currency='VND' WHERE currency != 'VND'")
+
+        # Cập nhật các chứng từ bán hàng / mua hàng cũ còn sót ZWL sang VND
+        for dt in ["Sales Order", "Sales Invoice", "Delivery Note", "Purchase Order", "Purchase Invoice", "Purchase Receipt"]:
+            if frappe.db.exists("DocType", dt):
+                frappe.db.sql(f"UPDATE `tab{dt}` SET price_list_currency='VND', plc_conversion_rate=1.0 WHERE price_list_currency='ZWL'")
+
+        # Thiết lập tỷ giá chuẩn USD <-> VND (Tỷ giá tham chiếu 25.400 VND/USD)
+        exchange_rates = [
+            {"from_currency": "USD", "to_currency": "VND", "exchange_rate": 25400.0},
+            {"from_currency": "VND", "to_currency": "USD", "exchange_rate": round(1.0 / 25400.0, 8)},
+            {"from_currency": "ZWL", "to_currency": "VND", "exchange_rate": 1.0},
+        ]
+        for ex in exchange_rates:
+            if not frappe.db.exists("Currency Exchange", {"from_currency": ex["from_currency"], "to_currency": ex["to_currency"], "date": "2026-01-01"}):
+                frappe.get_doc({
+                    "doctype": "Currency Exchange",
+                    "from_currency": ex["from_currency"],
+                    "to_currency": ex["to_currency"],
+                    "exchange_rate": ex["exchange_rate"],
+                    "date": "2026-01-01",
+                    "for_selling": 1,
+                    "for_buying": 1
+                }).insert(ignore_permissions=True)
+        print("✓ Đã cấu hình chỉ cho phép 2 đồng tiền VND & USD, cập nhật bảng giá và tỷ giá quy đổi chuẩn")
+    except Exception as e:
+        print(f"! Currency & Exchange Rate setup notice: {e}")
+
     # 2. Setup Vietnam Address Template
     from erpnext.regional.address_template.setup import update_address_template
     vn_template = """{{ address_line1 }}<br>
