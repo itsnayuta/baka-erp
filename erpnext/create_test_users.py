@@ -3,6 +3,17 @@ from frappe.utils.password import update_password
 
 TEST_USERS = [
     {
+        "email": "giamdoc@baka.vn",
+        "first_name": "Lê",
+        "last_name": "Giám Đốc",
+        "roles": [
+            "System Manager", "Accounts Manager", "Sales Manager", 
+            "Purchase Manager", "Stock Manager", "Manufacturing Manager", "HR Manager"
+        ],
+        "password": "123",
+        "role_desc": "Giám đốc / Ban điều hành (Toàn quyền điều hành, quản trị nghiệp vụ, phê duyệt)"
+    },
+    {
         "email": "ketoan@baka.vn",
         "first_name": "Nguyễn",
         "last_name": "Kế Toán",
