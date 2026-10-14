@@ -33,9 +33,27 @@ baka.attendance = {
 					// Đổi tiêu đề: "Điểm năng lượng" -> "Điểm đánh giá", "Tổng quan" -> "Tổng quan chuyên cần"
 					this.main_section.find(".line-chart-container .card-title").text(__("Điểm đánh giá"));
 					this.main_section.find(".heatmap-container .card-title").text(__("Tổng quan chuyên cần"));
+					if (this.heatmap) {
+						this.heatmap.countLabel = __("Điểm chuyên cần");
+					}
 				};
 
-				// 2. Hook get_user_points: lấy Điểm đánh giá (Energy Points) và tính Điểm chuyên cần (1h làm việc = 1 điểm)
+				// 2. Hook render_heatmap: đảm bảo countLabel lúc khởi tạo chart luôn là "Điểm chuyên cần"
+				frappe.ui.UserProfile.prototype.render_heatmap = function () {
+					this.heatmap = new frappe.Chart(".performance-heatmap", {
+						type: "heatmap",
+						start: new Date(moment().subtract(1, "year").toDate()),
+						countLabel: __("Điểm chuyên cần"),
+						data: {},
+						discreteDomains: 1,
+						radius: 3,
+						height: 140,
+					});
+					this.update_heatmap_data();
+					this.create_heatmap_chart_filters();
+				};
+
+				// 3. Hook get_user_points: lấy Điểm đánh giá (Energy Points) và tính Điểm chuyên cần (1h làm việc = 1 điểm)
 				frappe.ui.UserProfile.prototype.get_user_points = function () {
 					return Promise.all([
 						frappe.xcall("frappe.social.doctype.energy_point_log.energy_point_log.get_user_energy_and_review_points", { user: this.user_id }),
@@ -49,7 +67,7 @@ baka.attendance = {
 					});
 				};
 
-				// 3. Hook render_points_and_rank:
+				// 4. Hook render_points_and_rank:
 				// - Đổi tên cột 1: Điểm đánh giá (thay cho Điểm năng lượng)
 				// - Đổi tên cột 2: Điểm chuyên cần (thay cho Điểm đánh giá cũ)
 				frappe.ui.UserProfile.prototype.render_points_and_rank = function () {
@@ -82,11 +100,11 @@ baka.attendance = {
 					});
 				};
 
-				// 4. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (1h = 1 điểm, tối đa 8 điểm/ngày)
+				// 5. Hook update_heatmap_data: ô xanh trong tổng quan tính theo Điểm chuyên cần (1h = 1 điểm, tối đa 8 điểm/ngày)
 				frappe.ui.UserProfile.prototype.update_heatmap_data = function (date) {
 					frappe.xcall("erpnext.setup.wifi_attendance.get_chuyen_can_heatmap_data", {
 						user: this.user_id,
-						date: date
+						date: date || frappe.datetime.year_start()
 					}).then((r) => {
 						if (this.heatmap) {
 							this.heatmap.countLabel = __("Điểm chuyên cần");
@@ -99,7 +117,12 @@ baka.attendance = {
 			}
 		};
 
-		hook_controller();
+		// Tải trước bundle để sẵn sàng hook prototype ngay từ đầu
+		if (frappe.require) {
+			frappe.require("user_profile_controller.bundle.js", () => {
+				hook_controller();
+			});
+		}
 
 		let debounced_timer = null;
 		frappe.router.on("change", () => {
@@ -107,7 +130,15 @@ baka.attendance = {
 
 			let current_route = frappe.get_route();
 			if (current_route && current_route[0] === "user-profile") {
-				hook_controller();
+				if (frappe.require) {
+					frappe.require("user_profile_controller.bundle.js", () => {
+						hook_controller();
+						let cur_page = frappe.pages && frappe.pages["user-profile"];
+						if (cur_page && cur_page.user_profile && cur_page.user_profile.heatmap) {
+							cur_page.user_profile.heatmap.countLabel = __("Điểm chuyên cần");
+						}
+					});
+				}
 				if (debounced_timer) clearTimeout(debounced_timer);
 				debounced_timer = setTimeout(() => {
 					if (!$("#baka-profile-attendance-wrapper").length) {
@@ -122,7 +153,15 @@ baka.attendance = {
 		// Trigger nếu đang ở trang user-profile sẵn
 		let route = frappe.get_route();
 		if (route && route[0] === "user-profile") {
-			hook_controller();
+			if (frappe.require) {
+				frappe.require("user_profile_controller.bundle.js", () => {
+					hook_controller();
+					let cur_page = frappe.pages && frappe.pages["user-profile"];
+					if (cur_page && cur_page.user_profile && cur_page.user_profile.heatmap) {
+						cur_page.user_profile.heatmap.countLabel = __("Điểm chuyên cần");
+					}
+				});
+			}
 			setTimeout(() => {
 				if (!$("#baka-profile-attendance-wrapper").length) {
 					this.render_profile_widget();

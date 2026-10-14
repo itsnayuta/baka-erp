@@ -195,11 +195,20 @@ def seed():
     frappe.db.sql("DELETE FROM `tabEmployee Checkin`")
 
     sample_employees = [
+        {"user": "chutich@baka.vn", "name": "Bùi Chủ Tịch"},
+        {"user": "Administrator", "name": "Administrator"},
+        {"user": "giamdoc@baka.vn", "name": "Lê Giám Đốc"},
+        {"user": "coo@baka.vn", "name": "Trần Vận Hành"},
         {"user": "cskh@baka.vn", "name": "Phạm Thu Hà"},
         {"user": "sale1@baka.vn", "name": "Nguyễn Văn Nam"},
         {"user": "sale2@baka.vn", "name": "Trần Thị Mai"},
         {"user": "sale3@baka.vn", "name": "Lê Hoàng Quân"},
-        {"user": "coo@baka.vn", "name": "Trần Vận Hành"},
+        {"user": "ketoan@baka.vn", "name": "Nguyễn Kế Toán"},
+        {"user": "banhang@baka.vn", "name": "Trần Bán Hàng"},
+        {"user": "muahang@baka.vn", "name": "Lê Mua Hàng"},
+        {"user": "kho@baka.vn", "name": "Phạm Quản Kho"},
+        {"user": "sanxuat@baka.vn", "name": "Hoàng Sản Xuất"},
+        {"user": "nhansu@baka.vn", "name": "Vũ Nhân Sự"},
     ]
 
     from erpnext.setup.wifi_attendance import get_employee_for_user
@@ -308,21 +317,26 @@ def patch_frappe_files():
     try:
         with open(py_path, "r", encoding="utf-8") as f:
             py_code = f.read()
-        if "from erpnext.setup.wifi_attendance import get_chuyen_can_heatmap_data" not in py_code:
-            target_py = 'def get_energy_points_heatmap_data(user: str, date: str | None):'
-            replacement_py = '''def get_energy_points_heatmap_data(user: str, date: str | None = None):
+
+        import re
+        new_func = '''@frappe.whitelist()
+def get_energy_points_heatmap_data(user: str, date: str | None = None):
 	try:
 		from erpnext.setup.wifi_attendance import get_chuyen_can_heatmap_data
-		res = get_chuyen_can_heatmap_data(user, date)
-		if res:
-			return res
+		return get_chuyen_can_heatmap_data(user, date)
 	except Exception:
-		pass'''
-            if target_py in py_code:
-                py_code = py_code.replace(target_py, replacement_py)
-                with open(py_path, "w", encoding="utf-8") as f:
-                    f.write(py_code)
-                print("✓ Đã cập nhật get_energy_points_heatmap_data trong user_profile.py")
+		return {}'''
+
+        py_code = re.sub(
+            r'@frappe\.whitelist\(\)\s*def get_energy_points_heatmap_data\([^)]*\):.*?(?=@frappe\.whitelist\(\)|$)',
+            new_func + '\n\n\n',
+            py_code,
+            flags=re.DOTALL
+        )
+        with open(py_path, "w", encoding="utf-8") as f:
+            f.write(py_code)
+        print("✓ Đã cập nhật get_energy_points_heatmap_data trong user_profile.py")
     except Exception as e:
         print("Lỗi patch py:", e)
+
 
