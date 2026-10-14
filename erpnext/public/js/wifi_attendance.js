@@ -36,28 +36,41 @@ baka.attendance = {
 		}
 	},
 
+	_render_seq: 0,
+
 	setup_router_listener: function () {
-		frappe.router.on("change", () => {
-			let current_route = frappe.get_route();
-			if (current_route && current_route[0] === "user-profile") {
-				setTimeout(() => {
+		let debounced_render = null;
+		const trigger_render = () => {
+			if (debounced_render) clearTimeout(debounced_render);
+			debounced_render = setTimeout(() => {
+				let current_route = frappe.get_route();
+				if (current_route && current_route[0] === "user-profile") {
 					this.render_profile_widget();
-				}, 300);
-			}
+				} else {
+					$("#baka-profile-attendance-wrapper").remove();
+				}
+			}, 150);
+		};
+
+		frappe.router.on("change", () => {
+			trigger_render();
 		});
 
 		// Trigger if already on user-profile
 		let route = frappe.get_route();
 		if (route && route[0] === "user-profile") {
-			setTimeout(() => {
-				this.render_profile_widget();
-			}, 300);
+			trigger_render();
 		}
 	},
 
-	fetch_status: function (callback) {
+	fetch_status: function (target_user, callback) {
+		if (typeof target_user === "function") {
+			callback = target_user;
+			target_user = frappe.session.user;
+		}
 		frappe.call({
 			method: "erpnext.setup.wifi_attendance.get_attendance_status",
+			args: { user: target_user || frappe.session.user },
 			callback: (r) => {
 				if (r.message) {
 					this.status = r.message;
@@ -88,14 +101,29 @@ baka.attendance = {
 	},
 
 	render_profile_widget: function () {
-		if ($(".baka-profile-attendance-card").length) {
-			$(".baka-profile-attendance-card").remove();
-		}
-
 		let container = $(".user-profile .col-md-12").first();
 		if (!container.length) return;
 
-		this.fetch_status((s) => {
+		// Tạo hoặc lấy wrapper duy nhất để triệt để loại bỏ tình trạng lặp DOM
+		let $wrapper = $("#baka-profile-attendance-wrapper");
+		if (!$wrapper.length) {
+			$wrapper = $('<div id="baka-profile-attendance-wrapper" style="width: 100%;"></div>');
+			container.prepend($wrapper);
+		}
+
+		let current_route = frappe.get_route();
+		let target_user = (current_route && current_route[0] === "user-profile" && current_route[1])
+			? current_route[1]
+			: frappe.session.user;
+
+		let req_id = ++this._render_seq;
+
+		this.fetch_status(target_user, (s) => {
+			if (req_id !== this._render_seq) return;
+			if (!s || !s.employee_id) return;
+
+			let is_own_profile = (target_user === frappe.session.user);
+
 			let wifi_badge = s.is_wifi_ok
 				? `<span style="background: #e6f4ea; color: #137333; padding: 4px 10px; border-radius: 12px; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4zm0 3.5c3.74 0 7.15 1.48 9.68 3.92L12 19.33 2.32 11.42C4.85 8.98 8.26 7.5 12 7.5z"/></svg>
@@ -105,6 +133,35 @@ baka.attendance = {
 					<i class="fa fa-exclamation-triangle"></i>
 					Chưa vào WiFi công ty (${frappe.utils.escape_html(s.wifi_ssid)}) - IP: ${frappe.utils.escape_html(s.client_ip)}
 				   </span>`;
+
+			let action_section_html = "";
+			if (is_own_profile) {
+				action_section_html = `
+					<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+						<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a;">
+							<i class="fa fa-sign-in"></i> Chấm công VÀO (Check In)
+						</button>
+						<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7;">
+							<i class="fa fa-sign-out"></i> Chấm công RA (Check Out)
+						</button>
+						<button class="btn btn-default baka-view-history-btn" style="padding: 10px 16px; font-weight: 500;">
+							<i class="fa fa-list"></i> Xem lịch sử chi tiết
+						</button>
+					</div>
+				`;
+			} else {
+				action_section_html = `
+					<div style="display: flex; justify-content: space-between; align-items: center; background: var(--fg-color, #f8fafc); border: 1px dashed var(--border-color, #cbd5e1); border-radius: 8px; padding: 12px 18px; flex-wrap: wrap; gap: 10px;">
+						<div style="font-size: 13px; color: var(--text-muted, #64748b);">
+							<i class="fa fa-info-circle" style="color: #0284c7; margin-right: 6px;"></i>
+							Đang xem dữ liệu chấm công của nhân viên: <b style="color: var(--text-color, #1e293b);">${frappe.utils.escape_html(s.employee_name)}</b>
+						</div>
+						<button class="btn btn-default btn-sm baka-view-history-btn" style="font-weight: 500;">
+							<i class="fa fa-list"></i> Xem lịch sử chi tiết
+						</button>
+					</div>
+				`;
+			}
 
 			let card_html = `
 				<div class="frappe-card baka-profile-attendance-card" style="margin-bottom: 20px; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; background: var(--card-bg, #fff); box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow: hidden;">
@@ -156,36 +213,26 @@ baka.attendance = {
 							</div>
 						</div>
 
-						<div style="display: flex; gap: 12px; flex-wrap: wrap;">
-							<button class="btn btn-primary baka-checkin-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #16a34a; border-color: #16a34a;">
-								<i class="fa fa-sign-in"></i> Chấm công VÀO (Check In)
-							</button>
-							<button class="btn btn-info baka-checkout-btn" style="flex: 1; min-width: 140px; padding: 10px 20px; font-weight: 600; font-size: 14px; background: #0284c7; border-color: #0284c7;">
-								<i class="fa fa-sign-out"></i> Chấm công RA (Check Out)
-							</button>
-							<button class="btn btn-default baka-view-history-btn" style="padding: 10px 16px; font-weight: 500;">
-								<i class="fa fa-list"></i> Xem lịch sử chi tiết
-							</button>
-						</div>
+						${action_section_html}
 					</div>
 				</div>
 			`;
 
-			container.prepend(card_html);
+			$wrapper.html(card_html);
 
-			$(".baka-checkin-btn").on("click", () => {
+			$wrapper.find(".baka-checkin-btn").on("click", () => {
 				this.do_checkin("IN", () => {
 					this.render_profile_widget();
 				});
 			});
 
-			$(".baka-checkout-btn").on("click", () => {
+			$wrapper.find(".baka-checkout-btn").on("click", () => {
 				this.do_checkin("OUT", () => {
 					this.render_profile_widget();
 				});
 			});
 
-			$(".baka-view-history-btn").on("click", () => {
+			$wrapper.find(".baka-view-history-btn").on("click", () => {
 				frappe.set_route("List", "Employee Checkin", {
 					employee: s.employee_id,
 				});
@@ -268,3 +315,4 @@ if (window.frappe && frappe.boot) {
 		baka.attendance.init();
 	}, 500);
 }
+
