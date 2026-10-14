@@ -8,18 +8,24 @@
 
 ---
 
-## 1. Giới thiệu tổng quan
+## 1. Giới thiệu tổng quan & Mô hình tinh gọn
 
-**BAKAERP** là giải pháp ERP toàn diện được tùy biến chuyên sâu trên nền tảng **ERPNext / Frappe v15 (Docker Container)**, thiết kế riêng cho mô hình kinh doanh các sản phẩm thức uống dinh dưỡng:
-- **Tinh bột kháng PLUS**
-- **Tinh bột kháng CACAO**
-- **Tinh bột kháng TIBOKA**
-
-Hệ thống được bản địa hóa và cấu hình chuẩn theo quy định vận hành của doanh nghiệp Việt Nam:
-- **Tiền tệ chuẩn:** Chỉ hỗ trợ **VND** (đồng tiền cơ sở) và **USD** (quy đổi tỷ giá tự động 25.400 VND/USD).
-- **Hệ thống tài khoản kế toán:** Áp dụng hệ thống tài khoản theo **Thông tư 200/133** (1111, 1121, 1311, 1561, 3311, 5111,...).
-- **Chu kỳ tài chính:** Niên độ tài chính năm dương lịch Việt Nam (01/01 đến 31/12).
-- **Giao diện tinh gọn:** Loại bỏ hoàn toàn các phân hệ không dùng (Sản xuất phức tạp, Dự án, Y tế, Nông nghiệp, Phi lợi nhuận,...), chỉ giữ lại các không gian làm việc phục vụ trực tiếp cho Bán hàng, Kho, Kế toán và Nhân sự.
+**BAKAERP** là giải pháp ERP tối giản hóa chuyên sâu trên nền tảng **ERPNext / Frappe v15 (Docker Container)**, thiết kế chính xác theo mô hình kinh doanh tinh gọn của doanh nghiệp:
+- **Ngành hàng:** Chuyên doanh thức uống dinh dưỡng đóng hộp (không bán dịch vụ, không sản xuất hay mua bán nguyên vật liệu thô):
+  - **Tinh bột kháng PLUS** (365.000 đ)
+  - **Tinh bột kháng CACAO** (265.000 đ)
+  - **Tinh bột kháng TIBOKA** (250.000 đ)
+- **Kênh phân phối:** Chỉ phục vụ 2 nhóm đối tượng khách hàng:
+  - **Đại lý (B2B):** Các đại lý phân phối, nhà thuốc, chuỗi thực phẩm sạch.
+  - **Khách hàng cuối (B2C):** Khách hàng lẻ mua sản phẩm tiêu dùng trực tiếp.
+- **Quản lý nhân sự & Tiếp thị:** Tập trung vào đội ngũ Sale tiếp thị và Quản lý vận hành (Chấm công WiFi văn phòng, Điểm chuyên cần 8đ/ngày, Thi đua doanh số đơn hàng).
+- **Tối giản hóa triệt để (Ultra-minimal):**
+  - **Workspaces:** Ẩn toàn bộ 22 phân hệ không dùng (Sản xuất, Mua hàng nguyên liệu, Dự án, Y tế, Dịch vụ,...), hệ thống chỉ giữ đúng **6 Không gian làm việc cốt lõi** (`Trang chủ`, `Bán hàng`, `Kho vận`, `Khách hàng & Tiếp thị`, `Kế toán`, `Nhân sự`).
+  - **Danh mục Nhóm sản phẩm:** Duy nhất **Thức uống dinh dưỡng** (loại bỏ Raw Material, Services, Consumable).
+  - **Danh mục Nhóm khách hàng:** Chuẩn hóa chỉ gồm **Đại lý** và **Khách hàng cuối** (loại bỏ Commercial, Individual, Government,...).
+  - **Giao diện làm việc:** Dọn sạch các thẻ và liên kết thừa (loại bỏ bảo trì thiết bị, yêu cầu mua nguyên liệu, hợp đồng gia công).
+  - **Tiền tệ chuẩn:** Chỉ kích hoạt **VND** (cơ sở) và **USD** (tỷ giá quy đổi 25.400 VND/USD).
+  - **Kế toán chuẩn:** Hệ thống tài khoản theo **Thông tư 200/133** (1111, 1121, 1311, 1561, 3311, 5111,...).
 
 ---
 
@@ -64,9 +70,9 @@ Module chấm công thế hệ mới được tích hợp trực tiếp vào mà
 - **Điểm đánh giá (Assessment Points):** Ghi nhận điểm thưởng, hiệu suất và đóng góp công việc của từng nhân sự trong tháng.
 
 ### 4.2. Quản lý Bán hàng & Phân phối (Selling & Distribution)
-- Quản lý danh bạ Đại lý, Khách sỉ và Chuỗi cửa hàng (`Customer`).
-- Tạo và phê duyệt Đơn đặt hàng bán (`Sales Order`), áp dụng bảng giá niêm yết tự động.
-- Liên kết liền mạch từ Đơn bán hàng sang Phiếu xuất kho và Hóa đơn thu tiền.
+- Quản lý danh bạ phân nhóm rõ ràng: **Đại lý** (B2B: cửa hàng thực dưỡng, nhà thuốc, chuỗi thực phẩm) và **Khách hàng cuối** (B2C: khách lẻ tiêu dùng).
+- Tạo và phê duyệt Đơn đặt hàng bán (`Sales Order`), tự động áp dụng Bảng giá niêm yết VND.
+- Liên kết khép kín: Đơn bán hàng $\rightarrow$ Quản lý kho duyệt Phiếu xuất kho $\rightarrow$ Kế toán xuất Hóa đơn & Thu tiền.
 
 ### 4.3. Quản lý Kho vận & Tồn kho (Stock & Warehouse)
 - Quản lý kho hàng thành phẩm trung tâm: `Finished Goods - B`.

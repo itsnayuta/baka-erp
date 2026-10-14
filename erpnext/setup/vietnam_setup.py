@@ -145,17 +145,143 @@ Việt Nam"""
     update_address_template(country_name, vn_template, is_default=1)
     print(f"✓ Configured {country_name} Address Template as default")
 
-    # 3. Hide bloat / irrelevant workspaces
+    # 3. Tối giản hóa hệ thống (Workspaces, Shortcuts, Customer Groups, Item Groups, Domain Settings)
+    print("--- Tối giản hóa hệ thống theo mô hình Bán thức uống cho Đại lý & Khách cuối ---")
+    
+    # 3.1. Ẩn toàn bộ Workspaces dư thừa (chỉ giữ 6 workspace chính: Home, Selling, Stock, CRM, Accounting, Users)
     bloat_workspaces = [
         "Integration", "Integrations", "Settings", "ERPNext Settings", 
         "ERPNext Integrations", "Non Profit", "Agriculture", "Healthcare", 
         "Hospitality", "Quality", "Build", "Welcome Workspace", "Tools", "Website",
-        "Manufacturing", "Projects", "Assets", "Support"
+        "Manufacturing", "Projects", "Assets", "Support",
+        "Buying", "Payables", "Receivables", "Financial Reports"
     ]
     for ws in bloat_workspaces:
         if frappe.db.exists("Workspace", ws):
             frappe.db.set_value("Workspace", ws, "public", 0)
-    print(f"✓ Hidden unnecessary/foreign workspaces: {', '.join(bloat_workspaces)}")
+
+    core_workspaces = ["Home", "Selling", "Stock", "CRM", "Accounting", "Users"]
+    for ws in core_workspaces:
+        if frappe.db.exists("Workspace", ws):
+            frappe.db.set_value("Workspace", ws, "public", 1)
+            frappe.db.set_value("Workspace", ws, "is_hidden", 0)
+    print("✓ Đã ẩn các Workspace dư thừa: Buying, Payables, Receivables, Financial Reports và các phân hệ ngoại vi.")
+
+    # 3.2. Chuẩn hóa Nhóm khách hàng: Chỉ có "Đại lý" (B2B) và "Khách hàng cuối" (B2C)
+    from frappe.utils.nestedset import rebuild_tree
+    if not frappe.db.exists("Customer Group", "Đại lý"):
+        frappe.get_doc({
+            "doctype": "Customer Group",
+            "customer_group_name": "Đại lý",
+            "parent_customer_group": "All Customer Groups",
+            "is_group": 0
+        }).insert(ignore_permissions=True)
+
+    if not frappe.db.exists("Customer Group", "Khách hàng cuối"):
+        frappe.get_doc({
+            "doctype": "Customer Group",
+            "customer_group_name": "Khách hàng cuối",
+            "parent_customer_group": "All Customer Groups",
+            "is_group": 0
+        }).insert(ignore_permissions=True)
+
+    # Đổi tên khách hàng lẻ cũ nếu có
+    if frappe.db.exists("Customer", "Chị Nguyễn Thị Lan (Khách sỉ)"):
+        try:
+            frappe.rename_doc("Customer", "Chị Nguyễn Thị Lan (Khách sỉ)", "Chị Nguyễn Thị Lan (Khách hàng cuối)", force=True)
+            frappe.db.set_value("Customer", "Chị Nguyễn Thị Lan (Khách hàng cuối)", "customer_name", "Chị Nguyễn Thị Lan (Khách hàng cuối)")
+        except Exception:
+            pass
+
+    # Đồng bộ Customer Group cho các chứng từ giao dịch
+    frappe.db.sql("UPDATE `tabCustomer` SET customer_group='Khách hàng cuối' WHERE customer_name LIKE '%Lan%' OR customer_name LIKE '%cuối%' OR customer_group='Individual'")
+    frappe.db.sql("UPDATE `tabCustomer` SET customer_group='Đại lý' WHERE customer_group NOT IN ('Đại lý', 'Khách hàng cuối')")
+    frappe.db.sql("UPDATE `tabSales Order` SET customer_group='Khách hàng cuối' WHERE customer_name LIKE '%Lan%' OR customer_group='Individual'")
+    frappe.db.sql("UPDATE `tabSales Order` SET customer_group='Đại lý' WHERE customer_group NOT IN ('Đại lý', 'Khách hàng cuối')")
+    frappe.db.sql("UPDATE `tabSales Invoice` SET customer_group='Khách hàng cuối' WHERE customer_name LIKE '%Lan%' OR customer_group='Individual'")
+    frappe.db.sql("UPDATE `tabSales Invoice` SET customer_group='Đại lý' WHERE customer_group NOT IN ('Đại lý', 'Khách hàng cuối')")
+    frappe.db.sql("UPDATE `tabDelivery Note` SET customer_group='Khách hàng cuối' WHERE customer_name LIKE '%Lan%' OR customer_group='Individual'")
+    frappe.db.sql("UPDATE `tabDelivery Note` SET customer_group='Đại lý' WHERE customer_group NOT IN ('Đại lý', 'Khách hàng cuối')")
+
+    if frappe.db.exists("DocType", "Selling Settings"):
+        frappe.db.set_single_value("Selling Settings", "customer_group", "Khách hàng cuối")
+
+    for cg in ["Commercial", "Individual", "Government", "Non Profit"]:
+        if frappe.db.exists("Customer Group", cg):
+            try:
+                frappe.delete_doc("Customer Group", cg, force=True, ignore_permissions=True)
+            except Exception:
+                pass
+
+    try:
+        rebuild_tree("Customer Group")
+    except Exception:
+        pass
+    print("✓ Đã chuẩn hóa danh mục Nhóm khách hàng: 'Đại lý' và 'Khách hàng cuối'.")
+
+    # 3.3. Chuẩn hóa Nhóm sản phẩm: Duy nhất 'Thức uống dinh dưỡng' trực tiếp dưới 'All Item Groups'
+    if frappe.db.exists("Item Group", "Thức uống dinh dưỡng"):
+        frappe.db.set_value("Item Group", "Thức uống dinh dưỡng", "parent_item_group", "All Item Groups")
+    else:
+        frappe.get_doc({
+            "doctype": "Item Group",
+            "item_group_name": "Thức uống dinh dưỡng",
+            "parent_item_group": "All Item Groups",
+            "is_group": 0
+        }).insert(ignore_permissions=True)
+
+    for it in ["TBK-PLUS", "TBK-CACAO", "TBK-TIBOKA"]:
+        if frappe.db.exists("Item", it):
+            frappe.db.set_value("Item", it, "item_group", "Thức uống dinh dưỡng")
+
+    for ig in ["Raw Material", "Services", "Sub Assemblies", "Consumable", "Products"]:
+        if frappe.db.exists("Item Group", ig):
+            try:
+                frappe.delete_doc("Item Group", ig, force=True, ignore_permissions=True)
+            except Exception:
+                pass
+
+    try:
+        rebuild_tree("Item Group")
+    except Exception:
+        pass
+    print("✓ Đã chuẩn hóa danh mục Nhóm sản phẩm: Duy nhất 'Thức uống dinh dưỡng', loại bỏ nguyên liệu & dịch vụ.")
+
+    # 3.4. Cấu hình Domain Settings: Kích hoạt Retail, tắt Manufacturing
+    try:
+        if frappe.db.exists("DocType", "Domain Settings"):
+            ds = frappe.get_doc("Domain Settings")
+            ds.set("active_domains", [{"domain": "Retail"}])
+            ds.save(ignore_permissions=True)
+            print("✓ Đã cấu hình Domain Settings: Kích hoạt Retail, tắt hoàn toàn phân hệ Manufacturing.")
+    except Exception as e:
+        print(f"! Domain settings notice: {e}")
+
+    # 3.5. Dọn dẹp Shortcuts & Cards trên các Workspace
+    try:
+        if frappe.db.exists("Workspace", "Home"):
+            home_ws = frappe.get_doc("Workspace", "Home")
+            needed_shortcuts = ["Item", "Customer", "Sales Invoice", "Leaderboard", "Cấu hình WiFi Chấm công"]
+            home_ws.shortcuts = [s for s in home_ws.shortcuts if s.label in needed_shortcuts or s.link_to in needed_shortcuts]
+            home_ws.save(ignore_permissions=True)
+
+        if frappe.db.exists("Workspace", "CRM"):
+            crm_ws = frappe.get_doc("Workspace", "CRM")
+            crm_ws.links = [l for l in crm_ws.links if l.label != "Maintenance" and l.link_to not in ["Maintenance Schedule", "Maintenance Visit", "Warranty Claim"]]
+            crm_ws.save(ignore_permissions=True)
+
+        if frappe.db.exists("Workspace", "Stock"):
+            stock_ws = frappe.get_doc("Workspace", "Stock")
+            stock_ws.shortcuts = [s for s in stock_ws.shortcuts if s.label not in ["Material Request", "Purchase Receipt", "Learn Inventory Management"]]
+            irrelevant_stock = [
+                "Installation Note", "Serial No Service Contract Expiry", "Serial No Warranty Expiry",
+                "Subcontracted Raw Materials To Be Transferred", "Subcontracted Item To Be Received"
+            ]
+            stock_ws.links = [l for l in stock_ws.links if l.label not in irrelevant_stock and l.link_to not in irrelevant_stock]
+            stock_ws.save(ignore_permissions=True)
+        print("✓ Đã dọn dẹp các mục thừa trên giao diện Home, CRM, Kho hàng (loại bỏ bảo trì, yêu cầu mua nguyên liệu, hợp đồng dịch vụ).")
+    except Exception as e:
+        print(f"! Workspace links cleanup notice: {e}")
 
     # 4. Check Company and its Chart of Accounts
     companies = frappe.get_all("Company", fields=["name", "company_name", "chart_of_accounts", "default_currency"])

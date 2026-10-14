@@ -41,6 +41,10 @@ def run():
     # Đảm bảo file Frappe backend user_profile.py luôn trả về Điểm chuyên cần cho Heatmap
     patch_frappe_files()
 
+    # 8. Đồng bộ tối giản hóa hệ thống (Workspaces, Shortcuts, Customer & Item Groups)
+    from erpnext.setup.vietnam_setup import run as run_vn_setup
+    run_vn_setup()
+
     frappe.db.commit()
     print("==================================================================")
     print("=== HOÀN TẤT TOÀN BỘ MÔ PHỎNG HỆ THỐNG DOANH NGHIỆP THÁNG 10 ===")
@@ -230,7 +234,7 @@ def setup_products():
         frappe.get_doc({
             "doctype": "Item Group",
             "item_group_name": "Thức uống dinh dưỡng",
-            "parent_item_group": "Products",
+            "parent_item_group": "All Item Groups",
             "is_group": 0
         }).insert(ignore_permissions=True)
 
@@ -360,11 +364,11 @@ def setup_customers_and_sales_flow():
     print("\n[5/7] Tạo khách hàng & mô phỏng luồng bán hàng thống nhất tháng 10...")
 
     customers = [
-        {"customer_name": "Đại lý Dinh Dưỡng Xanh (Hà Nội)", "customer_group": "Commercial", "customer_type": "Company", "territory": "Vietnam"},
-        {"customer_name": "Chuỗi Thực Phẩm Sạch Healthy Mart (TP.HCM)", "customer_group": "Commercial", "customer_type": "Company", "territory": "Vietnam"},
-        {"customer_name": "Nhà Thuốc & Dược Phẩm An Tâm (Đà Nẵng)", "customer_group": "Commercial", "customer_type": "Company", "territory": "Vietnam"},
-        {"customer_name": "Cửa Hàng Thực Dưỡng Tâm An (Hà Nội)", "customer_group": "Commercial", "customer_type": "Company", "territory": "Vietnam"},
-        {"customer_name": "Chị Nguyễn Thị Lan (Khách sỉ)", "customer_group": "Individual", "customer_type": "Individual", "territory": "Vietnam"}
+        {"customer_name": "Đại lý Dinh Dưỡng Xanh (Hà Nội)", "customer_group": "Đại lý", "customer_type": "Company", "territory": "Vietnam"},
+        {"customer_name": "Chuỗi Thực Phẩm Sạch Healthy Mart (TP.HCM)", "customer_group": "Đại lý", "customer_type": "Company", "territory": "Vietnam"},
+        {"customer_name": "Nhà Thuốc & Dược Phẩm An Tâm (Đà Nẵng)", "customer_group": "Đại lý", "customer_type": "Company", "territory": "Vietnam"},
+        {"customer_name": "Cửa Hàng Thực Dưỡng Tâm An (Hà Nội)", "customer_group": "Đại lý", "customer_type": "Company", "territory": "Vietnam"},
+        {"customer_name": "Chị Nguyễn Thị Lan (Khách hàng cuối)", "customer_group": "Khách hàng cuối", "customer_type": "Individual", "territory": "Vietnam"}
     ]
 
     for c in customers:
@@ -445,7 +449,7 @@ def setup_customers_and_sales_flow():
         },
         {
             "so_date": "2026-10-12",
-            "customer": "Chị Nguyễn Thị Lan (Khách sỉ)",
+            "customer": "Chị Nguyễn Thị Lan (Khách hàng cuối)",
             "sales_user": "sale1@baka.vn",
             "items": [
                 {"item_code": "TBK-PLUS", "qty": 10, "rate": 365000},
