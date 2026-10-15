@@ -196,6 +196,44 @@ def setup_custom_fields():
                 "options": "Employee",
                 "insert_after": "custom_warehouse_type"
             }
+        ],
+        "Item": [
+            {
+                "fieldname": "custom_product_line",
+                "label": "Dòng sản phẩm",
+                "fieldtype": "Select",
+                "options": "PLUS\nCACAO\nTIBOKA",
+                "insert_after": "brand",
+                "in_list_view": 1,
+                "in_standard_filter": 1
+            }
+        ],
+        "Sales Order Item": [
+            {
+                "fieldname": "custom_product_line",
+                "label": "Dòng sản phẩm",
+                "fieldtype": "Data",
+                "insert_after": "item_code",
+                "fetch_from": "item_code.custom_product_line"
+            }
+        ],
+        "Sales Invoice Item": [
+            {
+                "fieldname": "custom_product_line",
+                "label": "Dòng sản phẩm",
+                "fieldtype": "Data",
+                "insert_after": "item_code",
+                "fetch_from": "item_code.custom_product_line"
+            }
+        ],
+        "Delivery Note Item": [
+            {
+                "fieldname": "custom_product_line",
+                "label": "Dòng sản phẩm",
+                "fieldtype": "Data",
+                "insert_after": "item_code",
+                "fetch_from": "item_code.custom_product_line"
+            }
         ]
     }
     create_custom_fields(custom_fields)
@@ -206,25 +244,44 @@ def setup_custom_fields():
 # 2. SETUP BRANDS & ITEMS (FEFO & BATCH SETTINGS)
 # ----------------------------------------------------------------------
 def setup_brands_and_items():
-    print("\n[Phase 1.2] Cấu hình 3 Nhãn hàng (Brand) & Sản phẩm có Lô/Hạn sử dụng...")
+    print("\n[Phase 1.2] Cấu hình Thương hiệu duy nhất BAKA & 3 Dòng sản phẩm (PLUS, CACAO, TIBOKA)...")
 
-    brands_data = [
-        {"name": "PLUS", "brand": "PLUS", "description": "Dòng tinh bột kháng cao cấp tăng cường lợi khuẩn và đề kháng chuyên sâu."},
-        {"name": "CACAO", "brand": "CACAO", "description": "Dòng tinh bột kháng thơm ngon hương vị ca cao tự nhiên."},
-        {"name": "TIBOKA", "brand": "TIBOKA", "description": "Dòng tinh bột kháng dinh dưỡng đại trà, bổ sung chất xơ hòa tan."}
+    # 1. Thương hiệu duy nhất: BAKA
+    if not frappe.db.exists("Brand", "BAKA"):
+        doc = frappe.get_doc({
+            "doctype": "Brand",
+            "brand": "BAKA",
+            "description": "Thương hiệu Thực phẩm Bảo vệ Sức khỏe & Tinh bột Kháng BAKA (Duy nhất)"
+        })
+        doc.insert(ignore_permissions=True)
+        print("✓ Đã tạo Thương hiệu duy nhất: BAKA")
+    else:
+        frappe.db.set_value("Brand", "BAKA", "description", "Thương hiệu Thực phẩm Bảo vệ Sức khỏe & Tinh bột Kháng BAKA (Duy nhất)")
+
+    # 2. Cấu trúc Cây nhóm hàng / Dòng sản phẩm (Product Lines) thuộc BAKA
+    if not frappe.db.exists("Item Group", "Sản phẩm BAKA"):
+        frappe.get_doc({
+            "doctype": "Item Group",
+            "item_group_name": "Sản phẩm BAKA",
+            "parent_item_group": "All Item Groups",
+            "is_group": 1
+        }).insert(ignore_permissions=True)
+
+    product_lines = [
+        {"name": "Dòng PLUS", "line": "PLUS", "desc": "Dòng tinh bột kháng cao cấp tăng cường lợi khuẩn và đề kháng chuyên sâu."},
+        {"name": "Dòng CACAO", "line": "CACAO", "desc": "Dòng tinh bột kháng thơm ngon hương vị ca cao tự nhiên."},
+        {"name": "Dòng TIBOKA", "line": "TIBOKA", "desc": "Dòng tinh bột kháng dinh dưỡng đại trà, bổ sung chất xơ hòa tan."}
     ]
 
-    for b in brands_data:
-        if not frappe.db.exists("Brand", b["name"]):
-            doc = frappe.get_doc({
-                "doctype": "Brand",
-                "brand": b["brand"],
-                "description": b["description"]
-            })
-            doc.insert(ignore_permissions=True)
-            print(f"✓ Đã tạo Nhãn hàng (Brand): {b['name']}")
-        else:
-            frappe.db.set_value("Brand", b["name"], "description", b["description"])
+    for pl in product_lines:
+        if not frappe.db.exists("Item Group", pl["name"]):
+            frappe.get_doc({
+                "doctype": "Item Group",
+                "item_group_name": pl["name"],
+                "parent_item_group": "Sản phẩm BAKA",
+                "is_group": 0
+            }).insert(ignore_permissions=True)
+            print(f"✓ Đã tạo Nhóm Dòng sản phẩm: {pl['name']}")
 
     # Cấu hình Stock Settings: Bắt buộc không cho phép tồn kho âm
     stock_settings = frappe.get_single("Stock Settings")
@@ -241,30 +298,37 @@ def setup_brands_and_items():
             "must_be_whole_number": 1
         }).insert(ignore_permissions=True)
 
+    # 3. Danh mục 3 SKU cốt lõi: Thương hiệu BAKA - Dòng PLUS, CACAO, TIBOKA
     items_data = [
         {
             "item_code": "TBK-PLUS",
-            "item_name": "Tinh bột kháng PLUS",
-            "brand": "PLUS",
+            "item_name": "Tinh bột kháng BAKA PLUS",
+            "brand": "BAKA",
+            "custom_product_line": "PLUS",
+            "item_group": "Dòng PLUS",
             "standard_rate": 365000,
             "valuation_rate": 200000,
-            "description": "Tinh bột kháng PLUS - Dòng cao cấp bổ sung lợi khuẩn đường ruột (365.000 đ/hộp)."
+            "description": "Tinh bột kháng BAKA PLUS - Dòng cao cấp tăng cường lợi khuẩn và đề kháng chuyên sâu (365.000 đ/hộp)."
         },
         {
             "item_code": "TBK-CACAO",
-            "item_name": "Tinh bột kháng CACAO",
-            "brand": "CACAO",
+            "item_name": "Tinh bột kháng BAKA CACAO",
+            "brand": "BAKA",
+            "custom_product_line": "CACAO",
+            "item_group": "Dòng CACAO",
             "standard_rate": 265000,
             "valuation_rate": 150000,
-            "description": "Tinh bột kháng CACAO - Dòng hương vị thơm ngon giàu chất xơ (265.000 đ/hộp)."
+            "description": "Tinh bột kháng BAKA CACAO - Dòng hương vị thơm ngon giàu chất xơ (265.000 đ/hộp)."
         },
         {
             "item_code": "TBK-TIBOKA",
-            "item_name": "Tinh bột kháng TIBOKA",
-            "brand": "TIBOKA",
+            "item_name": "Tinh bột kháng BAKA TIBOKA",
+            "brand": "BAKA",
+            "custom_product_line": "TIBOKA",
+            "item_group": "Dòng TIBOKA",
             "standard_rate": 250000,
             "valuation_rate": 140000,
-            "description": "Tinh bột kháng TIBOKA - Dòng tiêu chuẩn đại trà cho mọi gia đình (250.000 đ/hộp)."
+            "description": "Tinh bột kháng BAKA TIBOKA - Dòng tiêu chuẩn đại trà cho mọi gia đình (250.000 đ/hộp)."
         }
     ]
 
@@ -275,8 +339,9 @@ def setup_brands_and_items():
                 "doctype": "Item",
                 "item_code": code,
                 "item_name": it["item_name"],
-                "item_group": "Thức uống dinh dưỡng",
+                "item_group": it["item_group"],
                 "brand": it["brand"],
+                "custom_product_line": it["custom_product_line"],
                 "stock_uom": "Hộp",
                 "is_stock_item": 1,
                 "is_sales_item": 1,
@@ -294,6 +359,8 @@ def setup_brands_and_items():
             frappe.db.set_value("Item", code, {
                 "item_name": it["item_name"],
                 "brand": it["brand"],
+                "custom_product_line": it["custom_product_line"],
+                "item_group": it["item_group"],
                 "has_batch_no": 1,
                 "create_new_batch": 1,
                 "has_expiry_date": 1,
@@ -316,7 +383,24 @@ def setup_brands_and_items():
         else:
             frappe.db.set_value("Item Price", ip, {"price_list_rate": it["standard_rate"], "currency": "VND"})
 
-        print(f"✓ Đã cấu hình Sản phẩm: {code} - Nhãn hàng: {it['brand']} - Quản lý Lô & Date (FEFO) - Giá: {it['standard_rate']:,} VND")
+        print(f"✓ Đã cấu hình Sản phẩm: {code} - Thương hiệu: {it['brand']} - Dòng: {it['custom_product_line']} - Quản lý Lô & Date (FEFO) - Giá: {it['standard_rate']:,} VND")
+
+    # Chuẩn hóa dữ liệu lịch sử về Thương hiệu duy nhất BAKA và phân định Dòng sản phẩm
+    frappe.db.sql("UPDATE `tabItem` SET brand='BAKA', custom_product_line='PLUS' WHERE name='TBK-PLUS'")
+    frappe.db.sql("UPDATE `tabItem` SET brand='BAKA', custom_product_line='CACAO' WHERE name='TBK-CACAO'")
+    frappe.db.sql("UPDATE `tabItem` SET brand='BAKA', custom_product_line='TIBOKA' WHERE name='TBK-TIBOKA'")
+
+    frappe.db.sql("UPDATE `tabSales Order Item` SET brand='BAKA', custom_product_line='PLUS' WHERE item_code='TBK-PLUS'")
+    frappe.db.sql("UPDATE `tabSales Order Item` SET brand='BAKA', custom_product_line='CACAO' WHERE item_code='TBK-CACAO'")
+    frappe.db.sql("UPDATE `tabSales Order Item` SET brand='BAKA', custom_product_line='TIBOKA' WHERE item_code='TBK-TIBOKA'")
+
+    frappe.db.sql("UPDATE `tabSales Invoice Item` SET brand='BAKA', custom_product_line='PLUS' WHERE item_code='TBK-PLUS'")
+    frappe.db.sql("UPDATE `tabSales Invoice Item` SET brand='BAKA', custom_product_line='CACAO' WHERE item_code='TBK-CACAO'")
+    frappe.db.sql("UPDATE `tabSales Invoice Item` SET brand='BAKA', custom_product_line='TIBOKA' WHERE item_code='TBK-TIBOKA'")
+
+    frappe.db.sql("UPDATE `tabDelivery Note Item` SET brand='BAKA', custom_product_line='PLUS' WHERE item_code='TBK-PLUS'")
+    frappe.db.sql("UPDATE `tabDelivery Note Item` SET brand='BAKA', custom_product_line='CACAO' WHERE item_code='TBK-CACAO'")
+    frappe.db.sql("UPDATE `tabDelivery Note Item` SET brand='BAKA', custom_product_line='TIBOKA' WHERE item_code='TBK-TIBOKA'")
 
 
 # ----------------------------------------------------------------------
@@ -1243,6 +1327,16 @@ def import_marketplace_order(channel, order_id, customer_name, items, platform_f
     total_amount = sum(it["qty"] * it["rate"] for it in items)
     cost_center = f"Kênh {channel} - B"
 
+    # Đảm bảo khách hàng tồn tại
+    if not frappe.db.exists("Customer", customer_name):
+        frappe.get_doc({
+            "doctype": "Customer",
+            "customer_name": customer_name,
+            "customer_group": "Khách hàng cuối",
+            "territory": "Vietnam",
+            "customer_type": "Individual"
+        }).insert(ignore_permissions=True)
+
     # 1. Tạo Sales Order
     so = frappe.get_doc({
         "doctype": "Sales Order",
@@ -1715,7 +1809,7 @@ def setup_hr_and_kpi():
 # MANAGERIAL P&L ENGINE / API (LÃI LỖ QUẢN TRỊ ĐA CHIỀU)
 # ----------------------------------------------------------------------
 @frappe.whitelist()
-def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=None):
+def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=None, product_line=None):
     """
     Tính toán Báo cáo Lãi Lỗ Quản Trị (Managerial P&L) bóc tách chính xác:
     - Doanh thu gộp
@@ -1725,7 +1819,8 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
     - Chi phí Quảng cáo Ads Marketing
     - Chi phí Lương nhân sự & Chi phí Vận hành chung (Thuê kho/văn phòng)
     - Lợi nhuận ròng quản trị (Net Operating Profit)
-    Hỗ trợ lọc theo Nhãn hàng (PLUS, CACAO, TIBOKA) và Kênh bán hàng.
+    Thương hiệu duy nhất: BAKA.
+    Hỗ trợ lọc theo Dòng sản phẩm (PLUS, CACAO, TIBOKA) và Kênh bán hàng.
     """
     from_date = from_date or "2026-10-01"
     to_date = to_date or "2026-10-31"
@@ -1740,12 +1835,17 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
 
     where_clause = " AND ".join(inv_conditions)
 
-    # Lấy chi tiết từng dòng hóa đơn kèm Brand và COGS
+    # Lấy chi tiết từng dòng hóa đơn kèm Brand, Product Line và COGS
     query = f"""
         SELECT 
             COALESCE(si.custom_sales_channel, 'B2B Sỉ') as custom_sales_channel,
             sii.item_code,
-            COALESCE(NULLIF(sii.brand, ''), it.brand) as brand,
+            COALESCE(NULLIF(sii.brand, ''), it.brand, 'BAKA') as brand,
+            COALESCE(it.custom_product_line, CASE 
+                WHEN sii.item_code LIKE '%%PLUS%%' THEN 'PLUS'
+                WHEN sii.item_code LIKE '%%CACAO%%' THEN 'CACAO'
+                WHEN sii.item_code LIKE '%%TIBOKA%%' THEN 'TIBOKA'
+                ELSE 'Khác' END) as product_line,
             sii.qty,
             sii.base_net_amount,
             COALESCE(NULLIF(sii.incoming_rate, 0), dni.incoming_rate, it.valuation_rate, 0) as unit_cogs,
@@ -1760,15 +1860,22 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
     """
     invoice_rows = frappe.db.sql(query, inv_params, as_dict=True)
 
-    # Nếu có lọc brand
-    if brand:
+    # Xử lý bộ lọc Dòng sản phẩm & Thương hiệu
+    # Thương hiệu duy nhất là BAKA. PLUS, CACAO, TIBOKA là các dòng sản phẩm.
+    target_line = product_line
+    if brand in ("PLUS", "CACAO", "TIBOKA"):
+        target_line = brand  # Ánh xạ tương thích ngược
+
+    if target_line:
+        invoice_rows = [r for r in invoice_rows if r.product_line == target_line]
+    elif brand and brand != "BAKA":
         invoice_rows = [r for r in invoice_rows if r.brand == brand]
 
     total_gross_revenue = sum(flt(r.base_net_amount) for r in invoice_rows)
     total_cogs = sum(flt(r.cogs) for r in invoice_rows)
     gross_profit = total_gross_revenue - total_cogs
 
-    # Phí sàn & Vận chuyển (nhóm theo Sales Invoice để không cộng trùng dòng)
+    # Phí sàn & Vận chuyển
     si_fees_where = " AND ".join([c.replace("si.", "") for c in inv_conditions])
     si_fees_query = f"""
         SELECT 
@@ -1778,8 +1885,9 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
         WHERE {si_fees_where}
     """
     fees_res = frappe.db.sql(si_fees_query, inv_params, as_dict=True)[0]
-    total_platform_fee = flt(fees_res.total_platform_fee) if not brand else (total_gross_revenue * 0.08 if "Shop" in str(channel) or "Shopee" in str(channel) else 0)
-    total_shipping_fee = flt(fees_res.total_shipping_fee) if not brand else (total_gross_revenue * 0.02 if total_gross_revenue > 0 else 0)
+    is_line_filtered = bool(target_line)
+    total_platform_fee = flt(fees_res.total_platform_fee) if not is_line_filtered else (total_gross_revenue * 0.08 if "Shop" in str(channel) or "Shopee" in str(channel) else 0)
+    total_shipping_fee = flt(fees_res.total_shipping_fee) if not is_line_filtered else (total_gross_revenue * 0.02 if total_gross_revenue > 0 else 0)
 
     # Lấy Chi phí từ Sổ Cái GL Entry
     gl_query = """
@@ -1816,23 +1924,24 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
         data["gross_profit"] = data["revenue"] - data["cogs"]
         data["margin_pct"] = round((data["gross_profit"] / data["revenue"] * 100), 1) if data["revenue"] else 0
 
-    # Phân tích theo nhãn hàng
-    brand_breakdown = {}
+    # Phân tích theo Dòng sản phẩm (PLUS, CACAO, TIBOKA) thuộc Thương hiệu BAKA
+    product_line_breakdown = {}
     for r in invoice_rows:
-        br = r.brand or "Khác"
-        if br not in brand_breakdown:
-            brand_breakdown[br] = {"revenue": 0.0, "cogs": 0.0, "qty": 0}
-        brand_breakdown[br]["revenue"] += flt(r.base_net_amount)
-        brand_breakdown[br]["cogs"] += flt(r.cogs)
-        brand_breakdown[br]["qty"] += cint(r.qty)
+        pl = r.product_line or "Khác"
+        if pl not in product_line_breakdown:
+            product_line_breakdown[pl] = {"revenue": 0.0, "cogs": 0.0, "qty": 0}
+        product_line_breakdown[pl]["revenue"] += flt(r.base_net_amount)
+        product_line_breakdown[pl]["cogs"] += flt(r.cogs)
+        product_line_breakdown[pl]["qty"] += cint(r.qty)
 
-    for br, data in brand_breakdown.items():
+    for pl, data in product_line_breakdown.items():
         data["gross_profit"] = data["revenue"] - data["cogs"]
         data["margin_pct"] = round((data["gross_profit"] / data["revenue"] * 100), 1) if data["revenue"] else 0
 
     return {
         "period": {"from_date": from_date, "to_date": to_date},
-        "filters": {"brand": brand, "channel": channel},
+        "filters": {"brand": brand, "channel": channel, "product_line": target_line},
+        "brand_name": "BAKA",
         "summary": {
             "gross_revenue": total_gross_revenue,
             "cogs": total_cogs,
@@ -1850,7 +1959,8 @@ def get_managerial_pnl_report(from_date=None, to_date=None, brand=None, channel=
             "net_profit_margin_pct": round((net_operating_profit / total_gross_revenue * 100), 2) if total_gross_revenue else 0
         },
         "by_channel": channel_breakdown,
-        "by_brand": brand_breakdown
+        "by_product_line": product_line_breakdown,
+        "by_brand": product_line_breakdown  # Tương thích ngược với mã kiểm thử và UI
     }
 
 
@@ -1878,6 +1988,11 @@ def get_warehouse_dashboard_data():
             b.item_code,
             it.item_name,
             it.brand,
+            COALESCE(it.custom_product_line, CASE 
+                WHEN b.item_code LIKE '%%PLUS%%' THEN 'PLUS'
+                WHEN b.item_code LIKE '%%CACAO%%' THEN 'CACAO'
+                WHEN b.item_code LIKE '%%TIBOKA%%' THEN 'TIBOKA'
+                ELSE 'Khác' END) as product_line,
             b.actual_qty,
             b.stock_value
         FROM `tabBin` b
@@ -1895,6 +2010,11 @@ def get_warehouse_dashboard_data():
             b.item,
             it.item_name,
             it.brand,
+            COALESCE(it.custom_product_line, CASE 
+                WHEN b.item LIKE '%%PLUS%%' THEN 'PLUS'
+                WHEN b.item LIKE '%%CACAO%%' THEN 'CACAO'
+                WHEN b.item LIKE '%%TIBOKA%%' THEN 'TIBOKA'
+                ELSE 'Khác' END) as product_line,
             b.manufacturing_date,
             b.expiry_date,
             DATEDIFF(b.expiry_date, %(today)s) as days_to_expire
@@ -1938,6 +2058,7 @@ def get_warehouse_dashboard_data():
 
     return {
         "today": today,
+        "brand_name": "BAKA",
         "summary": {
             "total_items_in_stock": sum(flt(r.actual_qty) for r in stock_rows),
             "total_stock_value": sum(flt(r.stock_value) for r in stock_rows),
@@ -1957,3 +2078,56 @@ def get_warehouse_dashboard_data():
         "employee_warehouses": employee_stock,
         "stock_details": stock_rows
     }
+
+
+# ----------------------------------------------------------------------
+# CSV / EXCEL IMPORT SERVICE (ĐƠN HÀNG ĐA KÊNH & SÀN TMĐT)
+# ----------------------------------------------------------------------
+@frappe.whitelist()
+def import_orders_from_csv(csv_content, default_channel="TikTok Shop"):
+    """
+    Hỗ trợ nhập đơn hàng đa kênh từ nội dung file CSV/Excel:
+    Các cột: order_id, channel, customer, item_code, qty, rate, platform_fee, shipping_fee, sales_person
+    Tự động kiểm tra trùng lặp và ghi nhận doanh thu / xuất kho tương ứng.
+    """
+    import io
+    import csv
+
+    f = io.StringIO(csv_content.strip())
+    reader = csv.DictReader(f)
+    results = {"success": [], "skipped": [], "errors": []}
+
+    for row in reader:
+        try:
+            order_id = row.get("order_id") or row.get("Mã đơn")
+            if not order_id:
+                continue
+            channel = row.get("channel") or row.get("Kênh bán") or default_channel
+            customer = row.get("customer") or row.get("Khách hàng") or f"Khách mua {channel}"
+            item_code = row.get("item_code") or row.get("Mã SP") or "TBK-PLUS"
+            qty = flt(row.get("qty") or row.get("Số lượng") or 1)
+            rate = flt(row.get("rate") or row.get("Đơn giá") or 365000)
+            platform_fee = flt(row.get("platform_fee") or row.get("Phí sàn") or 0)
+            shipping_fee = flt(row.get("shipping_fee") or row.get("Phí ship") or 0)
+            sales_person = row.get("sales_person") or row.get("NVKD")
+
+            order_date = row.get("order_date") or row.get("Ngày") or nowdate()
+
+            res = import_marketplace_order(
+                channel=channel,
+                order_id=order_id,
+                customer_name=customer,
+                items=[{"item_code": item_code, "qty": qty, "rate": rate}],
+                platform_fee=platform_fee,
+                shipping_fee=shipping_fee,
+                order_date=order_date
+            )
+            if res.get("status") == "skipped":
+                results["skipped"].append({"order_id": order_id, "reason": res.get("message")})
+            else:
+                results["success"].append({"order_id": order_id, "invoice": res.get("sales_invoice")})
+        except Exception as e:
+            results["errors"].append({"order_id": row.get("order_id", "unknown"), "error": str(e)})
+
+    frappe.db.commit()
+    return results

@@ -1,17 +1,19 @@
 # QUY TẮC NGHIỆP VỤ HỆ THỐNG ERP (ERP BUSINESS RULES)
 **Dự án:** Hệ thống ERP Phân phối Thực phẩm Bảo vệ Sức khỏe (BAKAERP)  
-**Nhãn hàng:** PLUS, CACAO, TIBOKA  
+**Thương hiệu duy nhất:** BAKA  
+**Dòng sản phẩm:** PLUS (Cao cấp), CACAO (Hương vị), TIBOKA (Đại trà)  
 **Kênh bán:** TikTok Shop, Shopee, Đại lý B2B, Bán lẻ B2C trực tiếp, Website  
 
 ---
 
 ## 1. Quy tắc Quản lý Sản phẩm, Lô hàng & Xuất kho FEFO
 
-### 1.1. Phân cấp Nhãn hàng & Sản phẩm
-- Mỗi sản phẩm (`Item`) thuộc một trong ba Nhãn hàng chuẩn:
-  - `PLUS`: Dòng sản phẩm tinh bột kháng cao cấp (Giá bán lẻ: 365.000 đ/hộp; Giá vốn: 200.000 đ/hộp).
-  - `CACAO`: Dòng sản phẩm tinh bột kháng hương vị ca cao (Giá bán lẻ: 265.000 đ/hộp; Giá vốn: 150.000 đ/hộp).
-  - `TIBOKA`: Dòng sản phẩm tinh bột kháng đại trà (Giá bán lẻ: 250.000 đ/hộp; Giá vốn: 140.000 đ/hộp).
+### 1.1. Phân cấp Thương hiệu & Dòng sản phẩm
+- **Thương hiệu duy nhất là BAKA.** PLUS, CACAO, TIBOKA là các dòng sản phẩm (Product Lines) cốt lõi của BAKA, không phải thương hiệu riêng biệt.
+- Mỗi sản phẩm (`Item`) thuộc Thương hiệu duy nhất `BAKA` và gắn với một Dòng sản phẩm chuẩn:
+  - `PLUS`: Dòng tinh bột kháng BAKA cao cấp (Giá bán lẻ: 365.000 đ/hộp; Giá vốn: 200.000 đ/hộp).
+  - `CACAO`: Dòng tinh bột kháng BAKA hương vị ca cao tự nhiên (Giá bán lẻ: 265.000 đ/hộp; Giá vốn: 150.000 đ/hộp).
+  - `TIBOKA`: Dòng tinh bột kháng BAKA dinh dưỡng đại trà (Giá bán lẻ: 250.000 đ/hộp; Giá vốn: 140.000 đ/hộp).
 - Bắt buộc đơn vị tính gốc (`Stock UOM`): **`Hộp`** (số nguyên, không cho phép số lẻ).
 
 ### 1.2. Quy tắc Lô (Batch) & Hạn sử dụng (Expiry Date)
@@ -88,10 +90,10 @@ $$\text{Lợi nhuận sau Marketing} = \text{Lợi nhuận kinh doanh trực ti�
 $$\text{Lợi nhuận ròng quản trị (Net Profit)} = \text{Lợi nhuận sau Marketing} - \text{Chi phí Nhân viên (6411 + 6421)} - \text{Chi phí Vận hành chung (6426 + 6428)}$$
 
 ### 4.2. Nguyên tắc phân bổ chi phí
-- **Doanh thu & Giá vốn:** Phân bổ trực tiếp theo từng sản phẩm, nhãn hàng (`PLUS`, `CACAO`, `TIBOKA`) và kênh bán.
+- **Doanh thu & Giá vốn:** Phân bổ trực tiếp theo từng sản phẩm, Dòng sản phẩm (`PLUS`, `CACAO`, `TIBOKA`) thuộc thương hiệu duy nhất `BAKA` và Kênh bán.
 - **Phí sàn:** Phân bổ trực tiếp cho kênh TikTok Shop và Shopee.
-- **Chi phí Quảng cáo Ads:** Phân bổ theo chiến dịch của từng kênh và nhãn hàng tương ứng.
-- **Chi phí Lương & Vận hành:** Phân bổ chung cho doanh nghiệp hoặc chia theo tỷ trọng doanh thu giữa các nhãn hàng.
+- **Chi phí Quảng cáo Ads:** Phân bổ theo chiến dịch của từng kênh và dòng sản phẩm tương ứng.
+- **Chi phí Lương & Vận hành:** Phân bổ chung cho doanh nghiệp hoặc chia theo tỷ trọng doanh thu giữa các dòng sản phẩm.
 
 ---
 
@@ -112,3 +114,4 @@ $$\text{Lợi nhuận ròng quản trị (Net Profit)} = \text{Lợi nhuận sau
   - Chốt thành công đại lý phân phối mới: +30 điểm.
   - Đạt điểm chuyên cần tối đa trong tuần (không đi muộn): +10 điểm.
 - Bảng xếp hạng thi đua nhân sự (Leaderboard) được cập nhật tự động hàng tuần/tháng.
+

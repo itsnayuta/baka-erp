@@ -9,6 +9,7 @@ from erpnext.setup.health_food_erp_setup import (
     get_managerial_pnl_report,
     get_warehouse_dashboard_data,
     import_marketplace_order,
+    import_orders_from_csv,
     COMPANY,
     CENTRAL_WAREHOUSE,
     SALE1_WAREHOUSE,
@@ -38,17 +39,20 @@ def run_all_tests():
             raise AssertionError(f"Test Failed: {name} - {detail}")
 
     # ------------------------------------------------------------------
-    # 1. KIỂM THỬ SẢN PHẨM & 3 NHÃN HÀNG
+    # 1. KIỂM THỬ SẢN PHẨM, THƯƠNG HIỆU BAKA & 3 DÒNG SẢN PHẨM
     # ------------------------------------------------------------------
-    print("\n--- 1. Kiểm thử Sản phẩm & 3 Nhãn hàng (Brands & Items) ---")
-    brands = frappe.db.get_all("Brand", filters={"name": ["in", ["PLUS", "CACAO", "TIBOKA"]]}, pluck="name")
-    record_test("Tồn tại đủ 3 Nhãn hàng (PLUS, CACAO, TIBOKA)", len(brands) == 3, f"Found: {brands}")
+    print("\n--- 1. Kiểm thử Sản phẩm, Thương hiệu BAKA & Dòng sản phẩm (Brands & Items) ---")
+    record_test("Thương hiệu duy nhất là BAKA", frappe.db.exists("Brand", "BAKA") is not None)
 
-    items = frappe.db.get_all("Item", filters={"name": ["in", ["TBK-PLUS", "TBK-CACAO", "TBK-TIBOKA"]]}, fields=["name", "brand", "has_batch_no", "has_expiry_date", "stock_uom"])
+    product_lines = frappe.db.get_all("Item Group", filters={"name": ["in", ["Dòng PLUS", "Dòng CACAO", "Dòng TIBOKA"]]}, pluck="name")
+    record_test("Tồn tại đủ 3 Dòng sản phẩm (PLUS, CACAO, TIBOKA)", len(product_lines) == 3, f"Found: {product_lines}")
+
+    items = frappe.db.get_all("Item", filters={"name": ["in", ["TBK-PLUS", "TBK-CACAO", "TBK-TIBOKA"]]}, fields=["name", "brand", "custom_product_line", "has_batch_no", "has_expiry_date", "stock_uom"])
     record_test("Đủ 3 Sản phẩm cốt lõi", len(items) == 3)
+    record_test("Tất cả sản phẩm thuộc Thương hiệu duy nhất BAKA", all(it.brand == "BAKA" for it in items))
+    record_test("Gán đúng Dòng sản phẩm cho từng SKU", {it.name: it.custom_product_line for it in items} == {"TBK-PLUS": "PLUS", "TBK-CACAO": "CACAO", "TBK-TIBOKA": "TIBOKA"})
     record_test("Sản phẩm bật quản lý Lô & Hạn sử dụng (FEFO)", all(it.has_batch_no == 1 and it.has_expiry_date == 1 for it in items))
     record_test("Đơn vị tính chuẩn là Hộp", all(it.stock_uom == "Hộp" for it in items))
-    record_test("Gán đúng Nhãn hàng cho từng SKU", {it.name: it.brand for it in items} == {"TBK-PLUS": "PLUS", "TBK-CACAO": "CACAO", "TBK-TIBOKA": "TIBOKA"})
 
     # ------------------------------------------------------------------
     # 2. KIỂM THỬ KHO VẬN & QUẢN LÝ LÔ (FEFO)
@@ -95,6 +99,11 @@ def run_all_tests():
     )
     record_test("Adapter tự động nhận diện và chặn đơn trùng (Idempotent)", dedup_test.get("status") == "skipped")
 
+    # Kiểm tra Import đơn hàng từ CSV (sẵn sàng cho vận hành và tích hợp)
+    csv_sample = "order_id,channel,customer,item_code,qty,rate,platform_fee,shipping_fee\nTIKTOK-CSV-DEMO-01,TikTok Shop,Khách Hàng TikTok CSV,TBK-PLUS,2,365000,58400,25000"
+    csv_res = import_orders_from_csv(csv_sample)
+    record_test("Hỗ trợ import đơn hàng đa kênh từ CSV và chống trùng", len(csv_res.get("skipped", [])) >= 1 or len(csv_res.get("success", [])) >= 1)
+
     # ------------------------------------------------------------------
     # 4. KIỂM THỬ ĐỐI SOÁT TIỀN THU HỘ CỦA NHÂN VIÊN (1113)
     # ------------------------------------------------------------------
@@ -108,6 +117,8 @@ def run_all_tests():
     # ------------------------------------------------------------------
     print("\n--- 5. Kiểm thử Tài chính Quản trị & Báo cáo P&L Đa Chiều ---")
     summary = pnl["summary"]
+    record_test("Báo cáo P&L xác định Thương hiệu duy nhất BAKA", pnl.get("brand_name") == "BAKA")
+
     # Kiểm tra phương trình kế toán quản trị:
     # Gross Profit = Revenue - COGS
     expected_gross_profit = summary["gross_revenue"] - summary["cogs"]
@@ -117,18 +128,21 @@ def run_all_tests():
     expected_net = summary["gross_profit"] - summary["platform_fees"] - summary["shipping_fees"] - summary["ads_marketing_expense"] - summary["salary_expense"] - summary["rent_expense"] - summary["other_operating_expense"]
     record_test("Lợi nhuận ròng quản trị khớp phương trình độc lập", summary["net_operating_profit"] == expected_net, f"Net Profit: {summary['net_operating_profit']:,} đ (Tỷ suất {summary['net_profit_margin_pct']}%)")
 
-    # Kiểm tra báo cáo theo Nhãn hàng
-    pnl_plus = get_managerial_pnl_report(brand="PLUS")
-    record_test("Báo cáo P&L lọc chính xác theo Nhãn hàng PLUS", pnl_plus["summary"]["gross_revenue"] == 90520000.0, f"PLUS Revenue: {pnl_plus['summary']['gross_revenue']:,} đ")
+    # Kiểm tra báo cáo theo Dòng sản phẩm (PLUS, CACAO, TIBOKA)
+    pnl_plus = get_managerial_pnl_report(product_line="PLUS")
+    expected_plus_rev = pnl["by_product_line"]["PLUS"]["revenue"]
+    record_test("Báo cáo P&L lọc chính xác theo Dòng sản phẩm PLUS", pnl_plus["summary"]["gross_revenue"] == expected_plus_rev, f"PLUS Revenue: {pnl_plus['summary']['gross_revenue']:,} đ")
 
-    pnl_cacao = get_managerial_pnl_report(brand="CACAO")
-    record_test("Báo cáo P&L lọc chính xác theo Nhãn hàng CACAO", pnl_cacao["summary"]["gross_revenue"] == 45050000.0, f"CACAO Revenue: {pnl_cacao['summary']['gross_revenue']:,} đ")
+    pnl_cacao = get_managerial_pnl_report(product_line="CACAO")
+    expected_cacao_rev = pnl["by_product_line"]["CACAO"]["revenue"]
+    record_test("Báo cáo P&L lọc chính xác theo Dòng sản phẩm CACAO", pnl_cacao["summary"]["gross_revenue"] == expected_cacao_rev, f"CACAO Revenue: {pnl_cacao['summary']['gross_revenue']:,} đ")
 
-    pnl_tiboka = get_managerial_pnl_report(brand="TIBOKA")
-    record_test("Báo cáo P&L lọc chính xác theo Nhãn hàng TIBOKA", pnl_tiboka["summary"]["gross_revenue"] == 35000000.0, f"TIBOKA Revenue: {pnl_tiboka['summary']['gross_revenue']:,} đ")
+    pnl_tiboka = get_managerial_pnl_report(product_line="TIBOKA")
+    expected_tiboka_rev = pnl["by_product_line"]["TIBOKA"]["revenue"]
+    record_test("Báo cáo P&L lọc chính xác theo Dòng sản phẩm TIBOKA", pnl_tiboka["summary"]["gross_revenue"] == expected_tiboka_rev, f"TIBOKA Revenue: {pnl_tiboka['summary']['gross_revenue']:,} đ")
 
     total_brand_rev = pnl_plus["summary"]["gross_revenue"] + pnl_cacao["summary"]["gross_revenue"] + pnl_tiboka["summary"]["gross_revenue"]
-    record_test("Tổng doanh thu 3 Nhãn hàng khớp chính xác Tổng doanh thu toàn hệ thống", total_brand_rev == summary["gross_revenue"], f"Sum: {total_brand_rev:,} == Total: {summary['gross_revenue']:,}")
+    record_test("Tổng doanh thu 3 Dòng sản phẩm khớp chính xác Tổng doanh thu toàn hệ thống", total_brand_rev == summary["gross_revenue"], f"Sum: {total_brand_rev:,} == Total: {summary['gross_revenue']:,}")
 
     # ------------------------------------------------------------------
     # 6. KIỂM THỬ NHÂN SỰ, CHẤM CÔNG WIFI & ĐIỂM CHUYÊN CẦN
@@ -154,3 +168,4 @@ def run_all_tests():
     print(f"=== KẾT QUẢ: TẤT CẢ {len(test_results)}/ {len(test_results)} BÀI KIỂM THỬ ĐÃ PASS 100% ===")
     print("==================================================================")
     return {"status": "success", "total_tests": len(test_results), "passed": len(test_results)}
+

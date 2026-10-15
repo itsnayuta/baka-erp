@@ -4,7 +4,7 @@
 frappe.pages['baka-dashboard'].on_page_load = function (wrapper) {
 	var page = frappe.ui.make_app_page({
 		parent: wrapper,
-		title: __('Dashboard Quản Trị Doanh Nghiệp BAKA'),
+		title: __('BAKAERP - Quản Trị Phân Phối Thực Phẩm Bổ Sung & Tinh Bột Kháng'),
 		single_column: true
 	});
 
@@ -14,7 +14,7 @@ frappe.pages['baka-dashboard'].on_page_load = function (wrapper) {
 class BakaDashboard {
 	constructor(page) {
 		this.page = page;
-		this.brand_filter = "";
+		this.line_filter = "";
 		this.channel_filter = "";
 		this.from_date = "2026-10-01";
 		this.to_date = "2026-10-31";
@@ -30,16 +30,16 @@ class BakaDashboard {
 	}
 
 	setup_filters() {
-		// Bộ lọc Nhãn hàng
-		this.brand_field = this.page.add_field({
-			label: __('Nhãn hàng'),
+		// Bộ lọc Dòng sản phẩm (Thương hiệu BAKA)
+		this.line_field = this.page.add_field({
+			label: __('Dòng sản phẩm'),
 			fieldtype: 'Select',
-			fieldname: 'brand',
+			fieldname: 'product_line',
 			options: '\nTất cả\nPLUS\nCACAO\nTIBOKA',
 			default: 'Tất cả',
 			change: () => {
-				let val = this.brand_field.get_value();
-				this.brand_filter = (val === 'Tất cả' || !val) ? "" : val;
+				let val = this.line_field.get_value();
+				this.line_filter = (val === 'Tất cả' || !val) ? "" : val;
 				this.load_data();
 			}
 		});
@@ -68,7 +68,7 @@ class BakaDashboard {
 			this.export_csv();
 		}, 'octicon octicon-download');
 
-		this.page.add_button(__('My Profile'), () => {
+		this.page.add_button(__('Hồ Sơ & Chấm Công'), () => {
 			frappe.set_route('user-profile');
 		});
 	}
@@ -76,6 +76,15 @@ class BakaDashboard {
 	setup_container() {
 		this.container = $('<div class="baka-dashboard-wrapper p-3"></div>').appendTo(this.page.main);
 		this.container.html(`
+			<!-- BAKA BRAND & PRODUCT LINE BANNER -->
+			<div class="mb-3 d-flex align-items-center justify-content-between p-2 px-3 rounded shadow-sm" style="background: linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 100%); border: 1px solid #a7f3d0;">
+				<div>
+					<span class="badge badge-success mr-2" style="font-size: 13px; background-color: #059669; padding: 5px 10px;">Thương hiệu duy nhất: BAKA</span>
+					<span class="text-muted small">| Dòng sản phẩm cốt lõi: <b>PLUS</b> (Cao cấp), <b>CACAO</b> (Hương vị), <b>TIBOKA</b> (Đại trà)</span>
+				</div>
+				<div class="small font-weight-bold text-success text-uppercase">BAKAERP • HỆ THỐNG QUẢN TRỊ THỰC PHẨM BẢO VỆ SỨC KHỎE</div>
+			</div>
+
 			<div class="row kpi-cards-row mb-4">
 				<div class="col-md-2 col-sm-6 mb-3">
 					<div class="card p-3 shadow-sm border-0 h-100" style="border-left: 4px solid #2563eb !important; background: #fff;">
@@ -161,12 +170,12 @@ class BakaDashboard {
 						</div>
 						<div class="col-md-6 mb-3">
 							<div class="card shadow-sm p-3 border-0 h-100">
-								<h6 class="font-weight-bold mb-3 text-dark">2. Doanh Thu &amp; Hiệu Quả Theo Nhãn Hàng</h6>
+								<h6 class="font-weight-bold mb-3 text-dark">2. Doanh Thu &amp; Hiệu Quả Theo Dòng Sản Phẩm (Thương hiệu BAKA)</h6>
 								<div class="table-responsive">
 									<table class="table table-hover table-sm text-center mb-0" id="tbl-by-brand">
 										<thead class="thead-light">
 											<tr>
-												<th class="text-left">Nhãn Hàng</th>
+												<th class="text-left">Dòng Sản Phẩm</th>
 												<th>Số lượng</th>
 												<th>Doanh thu</th>
 												<th>Giá vốn</th>
@@ -204,7 +213,7 @@ class BakaDashboard {
 											<tr class="small font-weight-bold">
 												<th class="text-left">Mã Lô</th>
 												<th class="text-left">Sản phẩm</th>
-												<th>Nhãn hàng</th>
+												<th>Dòng sản phẩm</th>
 												<th>Ngày SX</th>
 												<th>Hạn Dùng</th>
 												<th>Thời hạn còn lại</th>
@@ -240,7 +249,7 @@ class BakaDashboard {
 											<tr>
 												<th class="text-left">Kho Nhân Viên</th>
 												<th class="text-left">Sản phẩm</th>
-												<th>Nhãn hàng</th>
+												<th>Dòng sản phẩm</th>
 												<th>Tồn thực tế</th>
 												<th>Giá trị (VND)</th>
 											</tr>
@@ -288,7 +297,8 @@ class BakaDashboard {
 			args: {
 				from_date: this.from_date,
 				to_date: this.to_date,
-				brand: this.brand_filter,
+				brand: this.line_filter,
+				product_line: this.line_filter,
 				channel: this.channel_filter
 			},
 			callback: (r) => {
@@ -332,13 +342,14 @@ class BakaDashboard {
 			`);
 		}
 
-		// Render Table By Brand
+		// Render Table By Product Line (Thương hiệu BAKA)
 		let $tbody_brand = $('#tbl-by-brand tbody').empty();
-		for (let [br, d] of Object.entries(data.by_brand)) {
+		let line_data = data.by_product_line || data.by_brand;
+		for (let [br, d] of Object.entries(line_data)) {
 			let badge_class = br === 'PLUS' ? 'badge-primary' : (br === 'CACAO' ? 'badge-warning text-dark' : 'badge-info');
 			$tbody_brand.append(`
 				<tr>
-					<td class="text-left"><span class="badge ${badge_class}">${br}</span></td>
+					<td class="text-left"><span class="badge ${badge_class}">Dòng ${br}</span></td>
 					<td>${d.qty.toLocaleString()} hộp</td>
 					<td class="font-weight-bold text-primary">${format_currency(d.revenue, 'VND', 0)}</td>
 					<td>${format_currency(d.cogs, 'VND', 0)}</td>
@@ -421,11 +432,12 @@ class BakaDashboard {
 		];
 		for (let b of all_batches) {
 			let badge = b.alert_level === 'warning' ? 'badge-warning text-dark' : (b.alert_level === 'danger' ? 'badge-danger' : 'badge-success');
+			let line_text = b.product_line ? ('Dòng ' + b.product_line) : (b.brand || '--');
 			$tbody_batches.append(`
 				<tr>
 					<td class="text-left font-weight-bold">${b.batch_id}</td>
 					<td class="text-left">${b.item_name}</td>
-					<td><span class="badge badge-light">${b.brand || '--'}</span></td>
+					<td><span class="badge badge-light font-weight-bold text-success">${line_text}</span></td>
 					<td>${b.manufacturing_date || '--'}</td>
 					<td class="font-weight-bold">${b.expiry_date || '--'}</td>
 					<td>${b.days_to_expire != null ? b.days_to_expire + ' ngày' : '--'}</td>
@@ -457,11 +469,12 @@ class BakaDashboard {
 		// Render Employee Mobile Warehouses
 		let $tbody_emp = $('#tbl-emp-stock tbody').empty();
 		for (let row of data.employee_warehouses) {
+			let line_text = row.product_line ? ('Dòng ' + row.product_line) : (row.brand || '--');
 			$tbody_emp.append(`
 				<tr>
 					<td class="text-left font-weight-bold text-dark">${row.warehouse_name}</td>
 					<td class="text-left">${row.item_name}</td>
-					<td><span class="badge badge-light">${row.brand}</span></td>
+					<td><span class="badge badge-light font-weight-bold text-success">${line_text}</span></td>
 					<td class="font-weight-bold text-primary">${row.actual_qty.toLocaleString()} hộp</td>
 					<td>${format_currency(row.stock_value, 'VND', 0)}</td>
 				</tr>
@@ -475,38 +488,41 @@ class BakaDashboard {
 			args: {
 				from_date: this.from_date,
 				to_date: this.to_date,
-				brand: this.brand_filter,
+				brand: this.line_filter,
+				product_line: this.line_filter,
 				channel: this.channel_filter
 			},
 			callback: (r) => {
 				if (!r.message) return;
 				let pnl = r.message;
-				let csv = 'BAKAERP - BAO CAO LAI LO QUAN TRI\n';
-				csv += `Ky bao cao: ${pnl.period.from_date} den ${pnl.period.to_date}\n\n`;
-				csv += 'KENH BAN HANG,SO LUONG (HOP),DOANH THU (VND),GIA VON (VND),LOI NHUAN GOP (VND),BIEN LAI GOP (%)\n';
+				let csv = 'BAKAERP - BÁO CÁO KẾT QUẢ KINH DOANH QUẢN TRỊ\n';
+				csv += 'THƯƠNG HIỆU: BAKA (DUY NHẤT)\n';
+				csv += `Kỳ báo cáo: ${pnl.period.from_date} đến ${pnl.period.to_date}\n\n`;
+				csv += 'KÊNH BÁN HÀNG,SỐ LƯỢNG (HỘP),DOANH THU (VND),GIÁ VỐN (VND),LỢI NHUẬN GỘP (VND),BIÊN LÃI GỘP (%)\n';
 				for (let [ch, d] of Object.entries(pnl.by_channel)) {
 					csv += `"${ch}",${d.qty},${d.revenue},${d.cogs},${d.gross_profit},${d.margin_pct}%\n`;
 				}
-				csv += '\nNHAN HANG,SO LUONG (HOP),DOANH THU (VND),GIA VON (VND),LOI NHUAN GOP (VND),BIEN LAI GOP (%)\n';
-				for (let [br, d] of Object.entries(pnl.by_brand)) {
-					csv += `"${br}",${d.qty},${d.revenue},${d.cogs},${d.gross_profit},${d.margin_pct}%\n`;
+				csv += '\nDÒNG SẢN PHẨM (THƯƠNG HIỆU BAKA),SỐ LƯỢNG (HỘP),DOANH THU (VND),GIÁ VỐN (VND),LỢI NHUẬN GỘP (VND),BIÊN LÃI GỘP (%)\n';
+				let line_data = pnl.by_product_line || pnl.by_brand;
+				for (let [br, d] of Object.entries(line_data)) {
+					csv += `"Dòng ${br}",${d.qty},${d.revenue},${d.cogs},${d.gross_profit},${d.margin_pct}%\n`;
 				}
-				csv += '\nCHI TIEU QUAN TRI,SO TIEN (VND)\n';
-				csv += `Doanh thu thuan,${pnl.summary.gross_revenue}\n`;
-				csv += `Gia von hang ban (COGS),${pnl.summary.cogs}\n`;
-				csv += `Loi nhuan gop,${pnl.summary.gross_profit}\n`;
-				csv += `Phi san TMDT,${pnl.summary.platform_fees}\n`;
-				csv += `Phi van chuyen,${pnl.summary.shipping_fees}\n`;
-				csv += `Chi phi Quang cao Ads,${pnl.summary.ads_marketing_expense}\n`;
-				csv += `Chi phi Luong nhan su,${pnl.summary.salary_expense}\n`;
-				csv += `Chi phi Thue mat bang kho bai,${pnl.summary.rent_expense}\n`;
-				csv += `Loi nhuan rong quan tri,${pnl.summary.net_operating_profit}\n`;
+				csv += '\nCHỈ TIÊU TÀI CHÍNH QUẢN TRỊ,SỐ TIỀN (VND)\n';
+				csv += `Doanh thu thuần,${pnl.summary.gross_revenue}\n`;
+				csv += `Giá vốn hàng bán (COGS),${pnl.summary.cogs}\n`;
+				csv += `Lợi nhuận gộp,${pnl.summary.gross_profit}\n`;
+				csv += `Phí sàn TMĐT,${pnl.summary.platform_fees}\n`;
+				csv += `Phí vận chuyển người bán chịu,${pnl.summary.shipping_fees}\n`;
+				csv += `Chi phí Quảng cáo Ads Marketing,${pnl.summary.ads_marketing_expense}\n`;
+				csv += `Chi phí Lương nhân sự,${pnl.summary.salary_expense}\n`;
+				csv += `Chi phí Thuê văn phòng & kho bãi,${pnl.summary.rent_expense}\n`;
+				csv += `Lợi nhuận ròng quản trị,${pnl.summary.net_operating_profit}\n`;
 
 				let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 				let link = document.createElement("a");
 				let url = URL.createObjectURL(blob);
 				link.setAttribute("href", url);
-				link.setAttribute("download", `BAKA_Managerial_Report_${nowdate()}.csv`);
+				link.setAttribute("download", `BAKAERP_Bao_Cao_Quan_Tri_${nowdate()}.csv`);
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);
@@ -514,3 +530,4 @@ class BakaDashboard {
 		});
 	}
 }
+

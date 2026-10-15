@@ -91,3 +91,4 @@ git pull origin main
 docker compose exec backend bench --site frontend migrate
 docker compose restart backend frontend websocket
 ```
+

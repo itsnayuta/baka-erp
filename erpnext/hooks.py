@@ -1,19 +1,19 @@
 app_name = "erpnext"
 app_title = "BAKAERP"
 app_publisher = "BAKA"
-app_description = """Phần mềm Quản trị Doanh nghiệp BAKAERP"""
+app_description = """Phần mềm Quản trị Doanh nghiệp BAKAERP - Thực phẩm Bổ sung & Tinh bột Kháng"""
 app_icon = "fa fa-th"
-app_color = "#e74c3c"
+app_color = "#059669"
 app_email = "admin@baka.vn"
-app_license = "Proprietary"
-source_link = ""
-app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
+app_license = "GNU General Public License (v3)"
+source_link = "https://github.com/itsnayuta/baka-erp"
+app_logo_url = "/assets/erpnext/images/baka-logo.svg"
 
 
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
-		"logo": "/assets/erpnext/images/erpnext-logo-blue.png",
+		"logo": "/assets/erpnext/images/baka-logo.svg",
 		"title": "BAKAERP",
 		"route": "/app/home",
 		"has_permission": "erpnext.check_app_permission",
@@ -112,8 +112,8 @@ calendars = ["Task", "Work Order", "Sales Order", "Holiday List", "ToDo"]
 website_generators = ["BOM", "Sales Partner"]
 
 website_context = {
-	"favicon": "/assets/erpnext/images/erpnext-favicon.svg",
-	"splash_image": "/assets/erpnext/images/erpnext-logo.svg",
+	"favicon": "/assets/erpnext/images/baka-favicon.svg",
+	"splash_image": "/assets/erpnext/images/baka-logo.svg",
 }
 
 # nosemgrep

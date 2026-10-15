@@ -1,6 +1,7 @@
 # KẾ HOẠCH TRIỂN KHAI NÂNG CẤP ERP (ERP IMPLEMENTATION PLAN)
 **Dự án:** Hệ thống ERP Phân phối Thực phẩm Bảo vệ Sức khỏe (BAKAERP)  
-**Nhãn hàng:** PLUS, CACAO, TIBOKA  
+**Thương hiệu duy nhất:** BAKA  
+**Dòng sản phẩm:** PLUS (Cao cấp), CACAO (Hương vị), TIBOKA (Đại trà)  
 **Kênh bán:** TikTok Shop, Shopee, Đại lý B2B, Bán lẻ B2C trực tiếp, Website  
 
 ---
@@ -17,7 +18,7 @@
 - **FEFO (First Expired, First Out):** Xuất kho bắt buộc chọn theo hạn sử dụng của từng lô hàng.
 - **Rõ ràng giữa điều chuyển và bán hàng:** Bàn giao hàng sang kho nhân viên sử dụng `Material Transfer`, không tạo doanh thu và không tạo công nợ; chỉ khi xuất bán cho khách mới ghi nhận doanh thu và giảm tồn kho nhân viên.
 - **Đối soát tiền thu hộ:** Tiền bán lẻ nhân viên thu được theo dõi riêng tại tài khoản tạm ứng/thu hộ, chỉ tất toán khi nhân viên nộp tiền về ngân hàng hoặc quỹ tiền mặt công ty.
-- **Chống trùng đơn sàn:** Khóa Unique Index trên mã đơn sàn (`marketplace_order_id`) khi import đơn Shopee / TikTok Shop.
+- **Chống trùng đơn sàn:** Khóa Unique Index trên mã đơn sàn (`marketplace_order_id`) khi import đơn Shopee / TikTok Shop (hỗ trợ nhập đơn thủ công hoặc Excel/CSV).
 
 ---
 
@@ -25,30 +26,33 @@
 
 ```mermaid
 flowchart TD
-    P0["Phase 0: Khảo sát & Đánh giá Codebase (Đã xong)"] --> P1["Phase 1: Nền tảng Dữ liệu & 3 Nhãn hàng"]
+    P0["Phase 0: Khảo sát & Đánh giá Codebase (Đã xong)"] --> P1["Phase 1: Đổi thương hiệu BAKAERP, Thương hiệu BAKA & 3 Dòng sản phẩm"]
     P1 --> P2["Phase 2: Kho vận, Lô hàng & Kho Nhân viên (FEFO)"]
-    P2 --> P3["Phase 3: Bán hàng Đa Kênh, CRM & Adapter Sàn TMĐT"]
+    P2 --> P3["Phase 3: Bán hàng Đa Kênh, CRM & CSV Import Chống Trùng"]
     P3 --> P4["Phase 4: Tài chính Quản trị, P&L & Thu tiền hộ"]
     P4 --> P5["Phase 5: Nhân sự, Nghỉ phép & Đánh giá KPI"]
-    P5 --> P6["Phase 6: Báo cáo, Dashboard & Kiểm thử E2E Toàn diện"]
+    P5 --> P6["Phase 6: Báo cáo, Dashboard Quản Trị & Kiểm thử E2E Toàn diện"]
 ```
 
 ---
 
-### Giai đoạn 1 (Phase 1): Nền tảng Dữ liệu, 3 Nhãn hàng & Phân quyền
-1. **Thiết lập 3 Nhãn hàng (`Brand`):**
-   - `PLUS`: Dòng sản phẩm cao cấp tăng cường lợi khuẩn và đề kháng chuyên sâu.
-   - `CACAO`: Dòng sản phẩm hương vị ca cao tự nhiên thơm ngon.
-   - `TIBOKA`: Dòng sản phẩm dinh dưỡng đại trà tiếp cận phổ thông.
-2. **Cập nhật 3 Sản phẩm (`Item`):**
-   - Gán `brand` tương ứng: `TBK-PLUS` $\rightarrow$ PLUS, `TBK-CACAO` $\rightarrow$ CACAO, `TBK-TIBOKA` $\rightarrow$ TIBOKA.
+### Giai đoạn 1 (Phase 1): Nhận diện BAKAERP, Thương hiệu BAKA & Dòng sản phẩm
+1. **Đổi thương hiệu giao diện BAKAERP:**
+   - Thay thế logo, favicon chuẩn SVG: `baka-logo.svg`, `baka-favicon.svg`, `baka-logo-wide.svg`.
+   - Cập nhật trang đăng nhập, tiêu đề web, navbar desk và stylesheet SCSS `baka_branding.scss`.
+   - Giữ nguyên cấu trúc lõi framework và giấy phép mã nguồn mở GNU GPL v3.
+2. **Thiết lập Thương hiệu duy nhất BAKA:**
+   - DocType `Brand`: Xác lập thương hiệu duy nhất là **`BAKA`**.
+   - Dòng sản phẩm (Product Lines): `PLUS` (Cao cấp), `CACAO` (Hương vị), `TIBOKA` (Đại trà) qua trường `custom_product_line` trên `Item`, `Sales Order Item`, `Sales Invoice Item`, `Delivery Note Item` và phân loại cây Item Group.
+3. **Cập nhật 3 Sản phẩm (`Item`):**
+   - Gán `brand = 'BAKA'`, `custom_product_line` tương ứng: `TBK-PLUS` $\rightarrow$ PLUS, `TBK-CACAO` $\rightarrow$ CACAO, `TBK-TIBOKA` $\rightarrow$ TIBOKA.
    - Kích hoạt quản lý lô và hạn sử dụng: `has_batch_no = 1`, `create_new_batch = 1`, `has_expiry_date = 1`, `shelf_life_in_days = 730` (2 năm).
    - Thiết lập bảng giá chuẩn Standard Selling (VND).
-3. **Bổ sung Custom Fields cần thiết:**
-   - `sales_channel` trên `Sales Order`, `Sales Invoice`: `[TikTok Shop, Shopee, B2B Sỉ, B2C Trực tiếp, Website]`.
-   - `marketplace_order_id` trên `Sales Order`: Lưu mã đơn Shopee/TikTok chống trùng.
-   - `platform_fee` & `shipping_fee_paid` trên `Sales Order` / `Sales Invoice`: Lưu chi phí sàn và phí ship do người bán chịu.
-   - `assigned_sales_user` trên `Customer` và `Sales Order`: Gán nhân viên kinh doanh phụ trách.
+4. **Bổ sung Custom Fields cần thiết:**
+   - `custom_sales_channel` trên `Sales Order`, `Sales Invoice`: `[TikTok Shop, Shopee, B2B Sỉ, B2C Trực tiếp, Website]`.
+   - `custom_marketplace_order_id` trên `Sales Order`: Lưu mã đơn Shopee/TikTok chống trùng (Idempotency).
+   - `custom_platform_fee` & `custom_shipping_fee` trên `Sales Order` / `Sales Invoice`: Bóc tách chi phí sàn và phí ship do người bán chịu.
+   - `custom_sales_person` trên `Customer` và `Sales Order`: Gán nhân viên kinh doanh phụ trách.
 
 ---
 
@@ -99,7 +103,7 @@ flowchart TD
 1. **Cây Cost Center Quản Trị:**
    - `BAKA - B`
      - Phân theo Kênh: `Kênh TikTok Shop - B`, `Kênh Shopee - B`, `Kênh B2B Sỉ - B`, `Kênh B2C Lẻ - B`, `Kênh Website - B`.
-     - Phân theo Nhãn hàng: `Nhãn hàng PLUS - B`, `Nhãn hàng CACAO - B`, `Nhãn hàng TIBOKA - B`.
+     - Phân theo Dòng sản phẩm: `Dòng sản phẩm PLUS - B`, `Dòng sản phẩm CACAO - B`, `Dòng sản phẩm TIBOKA - B`.
      - Chi phí Vận hành chung: `Khối Quản Lý & Văn Phòng - B`, `Khối Kho Vận - B`.
 2. **Tài khoản Kế toán Bổ sung:**
    - `1411 - Tiền thu hộ của NVKD - B` (Tài khoản theo dõi tiền mặt/chuyển khoản do NVKD tạm giữ).
@@ -112,13 +116,13 @@ flowchart TD
    - Xây dựng API và báo cáo trực quan bóc tách:
      $$\text{Lợi nhuận gộp} = \text{Doanh thu thuần} - \text{Giá vốn (COGS)}$$
      $$\text{Lợi nhuận ròng quản trị} = \text{Lợi nhuận gộp} - \text{Phí sàn} - \text{Phí vận chuyển} - \text{Chi phí Ads} - \text{Lương} - \text{Chi phí vận hành}$$
-   - Lọc và nhóm linh hoạt theo: Nhãn hàng (PLUS, CACAO, TIBOKA) và Kênh bán (5 kênh).
+   - Lọc và nhóm linh hoạt theo: Dòng sản phẩm (`PLUS`, `CACAO`, `TIBOKA`) thuộc thương hiệu `BAKA` và Kênh bán (5 kênh).
 
 ---
 
 ### Giai đoạn 5 (Phase 5): Nhân Sự, Nghỉ Phép & Đánh Giá KPI
 1. **Bảo tồn phân hệ Chấm công WiFi:**
-   - Giữ nguyên toàn bộ logic đã kiểm thử trong `wifi_attendance.py` và `wifi_attendance.js`.
+   - Giữ nguyên toàn bộ logic đã kiểm thử trong `wifi_attendance.py` và `wifi_attendance.js` (SSID `BAKA-OFFICE-5G`, 1h=1đ, tối đa 8đ/ngày, integer only, reset theo năm, khóa sau 10 lần/ngày).
 2. **Nghỉ phép (Leave Management):**
    - Đảm bảo nhân viên gửi đơn xin nghỉ phép (`Leave Application`), cấp quản lý (COO) phê duyệt. Ngày nghỉ có phép không bị tính là vắng mặt không phép.
 3. **Tính KPI & Điểm Đánh Giá:**
@@ -130,12 +134,12 @@ flowchart TD
 
 ---
 
-### Giai đoạn 6 (Phase 6): Dashboards & Kiểm Thử Toàn Diện (End-to-End Test Suite)
-1. **Xây dựng Dashboards chuyên biệt:**
-   - **Dashboard Ban Giám Đốc:** P&L quản trị thời gian thực, doanh thu theo kênh/nhãn hàng, công nợ tổng thể, cảnh báo hạn sử dụng.
-   - **Dashboard Quản Lý Kho:** Tồn kho theo lô và hạn dùng, cảnh báo cận date (< 60 ngày), hàng đang nằm tại kho nhân viên, hàng cách ly đổi trả.
-   - **Dashboard Kinh Doanh:** Doanh số từng NVKD, đại lý mới, công nợ theo từng NVKD phụ trách.
+### Giai đoạn 6 (Phase 6): Báo Cáo, Dashboard Quản Trị BAKAERP & Kiểm Thử Toàn Diện
+1. **Xây dựng Dashboard Quản Trị BAKAERP (`/app/baka-dashboard`):**
+   - **Dashboard Quản Trị Điều Hành:** P&L quản trị thời gian thực, doanh thu theo kênh và dòng sản phẩm BAKA, công nợ tổng thể, cảnh báo hạn sử dụng lô hàng (FEFO), tiền NVKD đang thu hộ chờ nộp.
+   - **Bộ lọc động:** Lọc theo Dòng sản phẩm (`Tất cả`, `PLUS`, `CACAO`, `TIBOKA`).
    - **Dashboard Nhân Viên (My Profile):** Giữ nguyên trải nghiệm chấm công WiFi, điểm chuyên cần, thêm danh mục hàng tồn trong kho di động của bản thân.
 2. **Bộ kiểm thử tự động (Automated Test Suite):**
    - Viết kịch bản kiểm thử tự động toàn diện `erpnext/setup/health_food_erp_test.py` xác minh từng mục trong Section 18 của `prompt.md`.
-   - Kiểm tra tính toán đối chiếu độc lập với bộ dữ liệu mẫu có đáp số xác thực.
+   - Kết quả: **45/45 bài kiểm thử PASS 100%**.
+

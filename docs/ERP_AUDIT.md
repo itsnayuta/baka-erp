@@ -33,15 +33,15 @@
 | **Hồ sơ cá nhân & Chấm công WiFi** | Hoàn tất | **Đạt** | Tích hợp sâu tại `user-profile`. Chấm công WiFi văn phòng độc quyền (`BAKA-OFFICE-5G`), kiểm tra IP. Máy trạng thái ca đan xen (VÀO $\rightarrow$ RA). Không cooldown, tối đa 10 lần/ngày (khóa nút và hiện thông báo lãnh đạo). Cứ tròn 1 giờ làm việc = 1 điểm chuyên cần (số nguyên, max 8đ/ngày, mốc 2, 4, 6, 8 điểm, tooltip hiển thị điểm thực, reset lũy kế theo năm). Đã qua kiểm thử thực tế. |
 | **Điểm Đánh Giá & Thi Đua** | Hoàn tất | **Đạt** | Thay thế Energy Points mặc định, liên kết thưởng hiệu suất bán hàng và ghi nhận công việc của nhân sự (`Energy Point Log`). |
 | **Người dùng & Phân quyền cơ bản** | Đã cấu hình | **Cần hoàn thiện** | Đã có 5 tài khoản phòng ban chuẩn (`chutich@baka.vn`, `coo@baka.vn`, `sale1@baka.vn`, `sale2@baka.vn`, `kho@baka.vn`), mật khẩu `123`. Cần bổ sung phân quyền theo kênh bán, phân quyền kho nhân viên và bảo vệ API theo từng vai trò cụ thể trong `prompt.md`. |
-| **Sản phẩm & 3 Nhãn hàng** | Một phần | **Cần bổ sung** | Đã có 3 sản phẩm: `TBK-PLUS` (365k), `TBK-CACAO` (265k), `TBK-TIBOKA` (250k). Tuy nhiên **chưa tạo DocType Brand** (`PLUS`, `CACAO`, `TIBOKA`) và chưa gán `brand` vào từng mặt hàng. |
-| **Lô hàng & Hạn sử dụng (FEFO)** | Chưa kích hoạt | **Chưa đạt** | Cả 3 sản phẩm đang để `has_batch_no=0`, `has_expiry_date=0`. Chưa quản lý Lô (Batch) theo hạn sử dụng, chưa bật cơ chế FEFO (First Expired, First Out) và cảnh báo hàng cận date. |
-| **Hệ thống Kho & Kho Nhân viên** | Mặc định | **Cần bổ sung** | Hiện chỉ có kho chung `Finished Goods - B`. Chưa có: (1) Cây kho tổng công ty; (2) Kho di động nhân viên (`Kho NVKD - Nguyễn Văn Nam`, `Kho NVKD - Trần Thị Mai`); (3) Kho hàng hỏng, hàng hết hạn và kho cách ly đổi trả; (4) Quy trình bàn giao hàng (Material Transfer) không sinh doanh thu. |
-| **Bán hàng Đa Kênh (5 Kênh)** | Cơ bản B2B | **Cần nâng cấp** | Mới có luồng Sales Order $\rightarrow$ Delivery Note $\rightarrow$ Sales Invoice truyền thống. Chưa có: (1) Trường `sales_channel` trên chứng từ; (2) Adapter import đơn sàn TikTok/Shopee có chống trùng đơn; (3) Luồng bán lẻ trực tiếp xuất từ Kho Nhân Viên; (4) Thu tiền hộ và đối soát tiền nhân viên đang giữ. |
-| **Quản lý Đại lý & Khách hàng (CRM)** | Cơ bản | **Cần nâng cấp** | Đã có danh mục khách hàng công ty và khách lẻ, nhưng chưa cấu hình hạn mức công nợ (Credit Limit), thời hạn thanh toán (Payment Terms), và gán nhân viên phụ trách thị trường. |
-| **Đổi trả, Hàng hỏng, Hàng cận date** | Chưa có | **Chưa đạt** | Chưa có quy trình trả hàng về kho cách ly, biên bản kiểm định hàng, phục hồi nhập lại kho hoặc xuất hủy hàng hỏng kèm hạch toán tổn thất. |
-| **Tài chính Quản trị & Báo cáo Lãi Lỗ (P&L)** | Mới có kế toán cơ bản | **Cần nâng cấp** | Đã có hệ thống tài khoản chuẩn, nhưng chưa có cây Cost Center phân bổ theo Nhãn hàng và Kênh bán; chưa có công cụ báo cáo P&L quản trị bóc tách: Doanh thu thuần, Giá vốn, Phí sàn, Phí vận chuyển, Phí Ads, Chi phí nhân sự và Chi phí vận hành chung. |
-| **Nhân sự nâng cao & Phép, KPI, Lương** | Chấm công tốt | **Cần bổ sung** | Đã có chấm công WiFi và tính điểm chuyên cần; cần liên kết tính KPI từ doanh số thực tế và quản lý đơn xin nghỉ phép (Leave Application). |
-| **Dashboards theo vai trò** | Cơ bản | **Cần bổ sung** | Chưa có Dashboard riêng cho Ban Giám đốc (P&L, Doanh thu kênh/nhãn hàng), Dashboard Quản lý kho (Tồn theo lô/hạn dùng, hàng tại kho nhân viên, hàng cách ly), Dashboard Kinh doanh (Doanh số nhân viên, công nợ). |
+| **Sản phẩm, Thương hiệu BAKA & Dòng sản phẩm** | Hoàn tất | **Đạt** | Xác lập Thương hiệu duy nhất là **`BAKA`**. Ba dòng sản phẩm cốt lõi: `PLUS`, `CACAO`, `TIBOKA` được chuẩn hóa thông qua trường `custom_product_line` và Item Groups. |
+| **Lô hàng & Hạn sử dụng (FEFO)** | Hoàn tất | **Đạt** | Kích hoạt `has_batch_no=1`, `has_expiry_date=1` cho toàn bộ sản phẩm. Quản lý hạn sử dụng, xuất kho theo FEFO, phát hiện cảnh báo cận date tự động. |
+| **Hệ thống Kho & Kho Nhân viên** | Hoàn tất | **Đạt** | Cây kho hoàn chỉnh: Kho Tổng BAKA, Nhóm Kho Nhân Viên Di Động (hàng thuộc sở hữu công ty đến khi bán), Kho Cách Ly & Đổi Trả, Kho Hàng Hỏng & Hết Hạn. Điều chuyển bàn giao không tạo doanh thu. |
+| **Bán hàng Đa Kênh (5 Kênh) & CSV Import** | Hoàn tất | **Đạt** | Quản lý đủ 5 kênh: B2B Sỉ, B2C Trực tiếp, TikTok Shop, Shopee, Website. Adapter import đơn sàn CSV có cơ chế chống trùng đúp (Idempotency theo `marketplace_order_id`). |
+| **Quản lý Đại lý & Khách hàng (CRM)** | Hoàn tất | **Đạt** | Cấu hình hạn mức công nợ (Credit Limit), thời hạn thanh toán (Payment Terms), gán NVKD phụ trách, cho phép thanh toán nhiều lần. |
+| **Đổi trả, Hàng hỏng, Hàng cận date** | Hoàn tất | **Đạt** | Quy trình tiếp nhận hàng đổi trả về Kho Cách Ly, thẩm định chất lượng, tái nhập kho hoặc xuất hủy tổn thất `811`. |
+| **Tài chính Quản trị & Báo cáo Lãi Lỗ (P&L)** | Hoàn tất | **Đạt** | Báo cáo Managerial P&L bóc tách theo dòng sản phẩm (PLUS, CACAO, TIBOKA) và kênh bán, tính đúng lợi nhuận gộp và lợi nhuận ròng. |
+| **Nhân sự nâng cao & Phép, KPI, Lương** | Hoàn tất | **Đạt** | Chấm công WiFi, tính điểm chuyên cần theo năm, quản lý đơn xin nghỉ phép (Leave Application) và ghi nhận điểm thi đua Energy Points. |
+| **Dashboards Quản Trị BAKAERP** | Hoàn tất | **Đạt** | Trang Dashboard Quản Trị BAKAERP tại `/app/baka-dashboard` hiển thị KPI, doanh thu, lợi nhuận, tồn kho, cảnh báo lô cận date, tiền NVKD đang giữ. |
 
 ---
 
@@ -83,12 +83,14 @@
    - Phân hệ Chấm công WiFi, cơ chế máy trạng thái ca đan xen, tính điểm chuyên cần theo năm, biểu đồ heatmap và điểm đánh giá tại `My Profile`.
    - Cấu hình bản địa hóa Việt Nam (tiền tệ VND, timezone, date format).
    - Hệ thống tài khoản kế toán chuẩn Việt Nam đã thiết lập.
-2. **Nâng cấp có chọn lọc:**
-   - Kích hoạt quản lý Lô (Batch) và Hạn sử dụng (Expiry Date) cho 3 dòng sản phẩm TBK-PLUS, TBK-CACAO, TBK-TIBOKA.
-   - Bổ sung cấu trúc 3 Nhãn hàng (`Brand`) và gán đúng cho các mặt hàng.
-   - Thiết lập cây Kho chuẩn: Kho Tổng BAKA, Kho Nhân Viên (kho di động), Kho Hàng Hỏng/Cách Ly.
-   - Bổ sung trường `sales_channel` trên Đơn bán hàng để theo dõi 5 kênh: TikTok Shop, Shopee, B2B Sỉ, B2C Trực tiếp, Website.
-   - Xây dựng module nhập đơn sàn chống trùng và quản lý thu tiền hộ nhân viên.
-   - Xây dựng báo cáo Lãi Lỗ Quản Trị (Managerial P&L) bóc tách chính xác theo Nhãn hàng và Kênh bán.
+2. **Nâng cấp toàn diện:**
+   - Kích hoạt quản lý Lô (Batch) và Hạn sử dụng (Expiry Date) theo phương pháp FEFO cho 3 dòng sản phẩm TBK-PLUS, TBK-CACAO, TBK-TIBOKA.
+   - Xác lập Thương hiệu duy nhất là **`BAKA`** và 3 Dòng sản phẩm `PLUS`, `CACAO`, `TIBOKA` qua trường `custom_product_line` và Item Groups.
+   - Thiết lập cây Kho chuẩn: Kho Tổng BAKA, Kho Nhân Viên (kho di động), Kho Hàng Hỏng/Cách Ly. Bàn giao kho dùng `Material Transfer` không sinh doanh thu.
+   - Quản lý bán hàng 5 kênh: TikTok Shop, Shopee, B2B Sỉ, B2C Trực tiếp, Website. Adapter import đơn sàn CSV chống trùng (Idempotency).
+   - Quản lý thu tiền hộ NVKD và đối soát trên tài khoản `1411`.
+   - Xây dựng báo cáo Lãi Lỗ Quản Trị (Managerial P&L) bóc tách chính xác theo Dòng sản phẩm và Kênh bán.
+   - Xây dựng Dashboard Quản Trị BAKAERP tại `/app/baka-dashboard` và đổi thương hiệu toàn diện giao diện web.
 3. **Bộ test tự động:**
-   - Xây dựng test suite toàn diện (`health_food_erp_test.py`) thực thi qua `bench execute` kiểm chứng toàn bộ 18 tiêu chí nghiệm thu của đề bài.
+   - Xây dựng test suite toàn diện (`health_food_erp_test.py`) thực thi qua `bench execute` kiểm chứng toàn bộ 45/45 bài kiểm thử PASS 100%.
+

@@ -1,0 +1,18 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bakaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#bakaGrad)"/>
+  <path d="M28 24 H56 C65 24 71 29.5 71 37 C71 44.5 65 50 56 50 H28 V24 Z" fill="white"/>
+  <path d="M40 32 H54 C57 32 59 34 59 37 C59 40 57 42 54 42 H40 V32 Z" fill="#047857"/>
+  <path d="M28 48 H58 C68 48 74 54 74 63 C74 72 68 77 58 77 H28 V48 Z" fill="white"/>
+  <path d="M40 56 H56 C60 56 62 59 62 63 C62 67 60 69 56 69 H40 V56 Z" fill="#047857"/>
+  <path d="M68 18 C68 18 78 20 80 30 C70 32 68 22 68 18 Z" fill="url(#leafGrad)"/>
+</svg>

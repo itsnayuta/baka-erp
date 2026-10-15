@@ -36,15 +36,20 @@ erDiagram
 
 ## 2. Chi tiết các Thực thể Dữ liệu Trọng yếu
 
-### 2.1. Phân hệ Danh mục Sản phẩm & Lô hàng
+### 2.1. Phân hệ Danh mục Sản phẩm, Thương hiệu & Dòng sản phẩm
 - **DocType `Brand`:**
-  - `name`: Tên nhãn hàng (`PLUS`, `CACAO`, `TIBOKA`).
-  - `brand`: Tên hiển thị.
-  - `description`: Mô tả phân khúc nhãn hàng (Cao cấp, Hương vị, Đại trà).
+  - `name`: Thương hiệu duy nhất **`BAKA`**.
+  - `brand`: Tên hiển thị (`BAKA`).
+  - `description`: Thương hiệu thực phẩm bổ sung và tinh bột kháng BAKA.
+- **Trường `custom_product_line` (Dòng sản phẩm):**
+  - Các dòng sản phẩm: `PLUS` (Dòng cao cấp), `CACAO` (Dòng hương vị), `TIBOKA` (Dòng đại trà).
+  - Tích hợp tại: `Item`, `Sales Order Item`, `Sales Invoice Item`, `Delivery Note Item`.
+  - Phân loại Item Group: `Sản phẩm BAKA` $\rightarrow$ `Dòng PLUS`, `Dòng CACAO`, `Dòng TIBOKA`.
 - **DocType `Item`:**
   - `item_code`: Mã sản phẩm duy nhất (`TBK-PLUS`, `TBK-CACAO`, `TBK-TIBOKA`).
   - `item_name`: Tên đầy đủ của sản phẩm.
-  - `brand`: Liên kết đến `Brand`.
+  - `brand`: Liên kết đến Thương hiệu duy nhất `BAKA`.
+  - `custom_product_line`: Dòng sản phẩm tương ứng (`PLUS`, `CACAO`, `TIBOKA`).
   - `has_batch_no`: `1` (bắt buộc quản lý theo số lô).
   - `create_new_batch`: `1` (tự động gợi ý/tạo số lô khi nhập kho).
   - `has_expiry_date`: `1` (bắt buộc có hạn sử dụng).
@@ -112,14 +117,23 @@ erDiagram
   - `6421`: Chi phí nhân viên quản lý.
   - `6426`: Chi phí thuê mặt bằng, văn phòng, kho bãi.
 - **DocType `Cost Center`:**
-  - Quản lý lãi lỗ đa chiều theo Kênh bán (`Shopee`, `TikTok Shop`, `B2B Sỉ`, `B2C Trực tiếp`, `Website`) và Nhãn hàng (`PLUS`, `CACAO`, `TIBOKA`).
+  - Quản lý lãi lỗ đa chiều theo Kênh bán (`Shopee`, `TikTok Shop`, `B2B Sỉ`, `B2C Trực tiếp`, `Website`) và Dòng sản phẩm (`PLUS`, `CACAO`, `TIBOKA`) thuộc thương hiệu duy nhất `BAKA`.
 
-### 2.5. Phân hệ Nhân sự, Chấm công & KPI
+### 2.5. Phân hệ Bán hàng Đa Kênh, CSV Import & Chống Trùng Đơn
+- **Idempotency Key / Index:**
+  - `marketplace_order_id` trên `Sales Order` & `Sales Invoice` được đánh chỉ mục.
+  - Adapter `import_orders_from_csv` kiểm tra trùng lặp trước khi insert; nếu trùng đơn sàn hệ thống lập tức bỏ qua, bảo vệ dữ liệu không bị ghi nhận doanh thu hoặc xuất kho đúp.
+  - Phí sàn (`custom_platform_fee`) và phí ship (`custom_shipping_fee`) được bóc tách riêng.
+
+### 2.6. Phân hệ Nhân sự, Chấm công & KPI
 - **DocType `Employee`:**
   - Thông tin định danh nhân sự, chức danh, phòng ban, người dùng liên kết (`user_id`).
 - **DocType `Employee Checkin`:**
-  - Ghi nhận lịch sử quẹt thẻ WiFi: `log_type` (IN/OUT), `time`, `ip_address`, `wifi_ssid`, `status`.
+  - Ghi nhận lịch sử quẹt thẻ WiFi: `log_type` (IN/OUT), `time`, `ip_address`, `wifi_ssid`, `status`. Khóa sau 10 lần/ngày.
+- **Tính điểm Chuyên cần:**
+  - Cứ tròn 1 giờ làm việc = 1 điểm (số nguyên, tối đa 8 điểm/ngày, reset theo năm).
 - **DocType `Energy Point Log`:**
   - Điểm đánh giá thi đua, ghi nhận thành tích bán hàng và KPI của nhân sự.
 - **DocType `Leave Application`:**
   - Đơn xin nghỉ phép, thời gian nghỉ, lý do, người phê duyệt (`coo@baka.vn`).
+

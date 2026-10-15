@@ -68,29 +68,50 @@ def run():
     frappe.db.set_default("number_format", "#.###,##")
     frappe.db.set_default("language", "vi")
 
-    # 1.1 Navbar Settings (Hide foreign/external Frappe/ERPNext help links)
+    # 1.1 Navbar Settings (Hide foreign/external Frappe/ERPNext help links, set BAKA logo)
     try:
         navbar_settings = frappe.get_single("Navbar Settings")
+        navbar_settings.app_logo = "/assets/erpnext/images/baka-logo.svg"
         for item in navbar_settings.help_dropdown:
             item.hidden = 1
         for item in navbar_settings.settings_dropdown:
             if any(term in (item.route or "").lower() for term in ["docs", "frappe", "erpnext", "discuss", "school", "issue"]):
                 item.hidden = 1
         navbar_settings.save(ignore_permissions=True)
-        print("✓ Configured Navbar Settings (App Name: BAKAERP, hid all external foreign links)")
+        print("✓ Configured Navbar Settings (App Logo: baka-logo.svg, hid foreign links)")
     except Exception as e:
         print(f"! Navbar Settings notice: {e}")
 
-    # 1.2 Website Settings (Clear old app footers and powered by)
+    # 1.2 Website Settings (Full BAKAERP branding: Logo, Favicon, Banner, Title, Head styling)
     try:
         if frappe.db.exists("DocType", "Website Settings"):
             web_settings = frappe.get_single("Website Settings")
             web_settings.app_name = "BAKAERP"
-            web_settings.copyright = "BAKAERP"
+            web_settings.app_logo = "/assets/erpnext/images/baka-logo.svg"
+            web_settings.favicon = "/assets/erpnext/images/baka-favicon.svg"
+            web_settings.title_prefix = "BAKAERP"
+            web_settings.brand_html = '<span style="font-weight: 800; font-size: 18px; color: #047857; letter-spacing: 0.5px;">BAKA</span><span style="font-weight: 600; font-size: 18px; color: #0f172a; margin-left: 2px;">ERP</span>'
+            web_settings.banner_html = '<div style="font-size: 12.5px; color: #047857; font-weight: 600; text-align: center; padding: 4px 0;">HỆ THỐNG QUẢN TRỊ DOANH NGHIỆP THỰC PHẨM BỔ SUNG &amp; TINH BỘT KHÁNG BAKA</div>'
+            web_settings.copyright = "BAKAERP © 2026. Phân phối Thực phẩm Bổ sung & Tinh bột Kháng"
             web_settings.footer_powered = ""
             web_settings.hide_footer_signup = 1
+            web_settings.head_html = """
+<style>
+  .navbar-brand { font-weight: 800; color: #059669 !important; font-size: 18px; }
+  .page-card-head h4 { font-weight: 800; color: #065f46; letter-spacing: -0.2px; }
+  .page-card-head::after {
+    content: "Hệ thống Quản trị Doanh nghiệp Thực phẩm Bổ sung & Tinh bột Kháng";
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #059669;
+    margin-top: 4px;
+    margin-bottom: 12px;
+  }
+</style>
+"""
             web_settings.save(ignore_permissions=True)
-            print("✓ Configured Website Settings (BAKAERP branding, removed external footers)")
+            print("✓ Configured Website Settings (BAKAERP branding: Logo, Favicon, Title prefix, Banner, Head CSS)")
     except Exception as e:
         print(f"! Website Settings notice: {e}")
 
