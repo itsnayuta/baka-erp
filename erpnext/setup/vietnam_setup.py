@@ -297,8 +297,15 @@ Việt Nam"""
     try:
         if frappe.db.exists("Workspace", "Home"):
             home_ws = frappe.get_doc("Workspace", "Home")
-            needed_shortcuts = ["Item", "Customer", "Sales Invoice", "Leaderboard", "Cấu hình WiFi Chấm công"]
+            needed_shortcuts = ["Dashboard Quản Trị", "Item", "Customer", "Sales Invoice", "Leaderboard", "Cấu hình WiFi Chấm công"]
             home_ws.shortcuts = [s for s in home_ws.shortcuts if s.label in needed_shortcuts or s.link_to in needed_shortcuts]
+            if not any(s.link_to == "baka-dashboard" for s in home_ws.shortcuts):
+                home_ws.append("shortcuts", {
+                    "label": "Dashboard Quản Trị",
+                    "type": "Page",
+                    "link_to": "baka-dashboard",
+                    "color": "Blue"
+                })
             home_ws.save(ignore_permissions=True)
 
         if frappe.db.exists("Workspace", "CRM"):
